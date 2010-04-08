@@ -1,8 +1,32 @@
+/*************************************************************************
+*                                                                        *
+*   1) This source code file, in unmodified form, and compiled classes   *
+*      derived from it can be used and distributed without restriction,  *
+*      including for commercial use.  (Attribution is not required       *
+*      but is appreciated.)                                              *
+*                                                                        *
+*    2) Modified versions of this file can be made and distributed       *
+*       provided:  the modified versions are put into a Java package     *
+*       different from the original package, edu.hws;  modified          *
+*       versions are distributed under the same terms as the original;   *
+*       and the modifications are documented in comments.  (Modification *
+*       here does not include simply making subclasses that belong to    *
+*       a package other than edu.hws, which can be done without any      *
+*       restriction.)                                                    *
+*                                                                        *
+*   David J. Eck                                                         *
+*   Department of Mathematics and Computer Science                       *
+*   Hobart and William Smith Colleges                                    *
+*   Geneva, New York 14456,   USA                                        *
+*   Email: eck@hws.edu          WWW: http://math.hws.edu/eck/            *
+*                                                                        *
+*************************************************************************/
 
-package frec.jcm.core;
+package frec.jcm.data;
+
+// This class is from edu.hws.jcm.data package with modifications for F-ReC.
 
 /**
- * This class is from edu.hws.jcm.data package with modifications for F-ReC.
  * A Parser can take a string and compile it into an ExpressionProgram.
  * MathObjects, such as variables and functions, can be registered with
  * the Parser.  This means that the Parser will recognize them in the
@@ -357,7 +381,7 @@ public class Parser implements java.io.Serializable {
     *  Called as part of the parsing process.  From outside this class, this would
     *  probably be called only by a ParserExtension.
     */
-   boolean parseLogicalTerm(ParserContext context) {
+   public boolean parseLogicalTerm(ParserContext context) {
       boolean isBool = parseLogicalFactor(context);
       int tok = context.look();
       if (tok == ParserContext.OPCHARS && context.tokenString.equals("|") && !isBool)
@@ -376,7 +400,7 @@ public class Parser implements java.io.Serializable {
     *  Called as part of the parsing process.  From outside this class, this would
     *  probably be called only by a ParserExtension.
     */
-   boolean parseLogicalFactor(ParserContext context) {
+   public boolean parseLogicalFactor(ParserContext context) {
        int tok = context.look();
        int notCt = 0;
        while (tok == ParserContext.OPCHARS && context.tokenString.equals("~")) {
@@ -396,7 +420,7 @@ public class Parser implements java.io.Serializable {
     *  Called as part of the parsing process.  From outside this class, this would
     *  probably be called only by a ParserExtension.
     */
-   boolean parseRelation(ParserContext context) {
+   public boolean parseRelation(ParserContext context) {
        boolean isBool = parseExpression(context);
        int tok = context.look();
        if (tok != ParserContext.OPCHARS)
@@ -466,7 +490,7 @@ public class Parser implements java.io.Serializable {
     *  Called as part of the parsing process.  From outside this class, this would
     *  probably be called only by a ParserExtension.
     */
-   boolean parseTerm(ParserContext context) {
+   public boolean parseTerm(ParserContext context) {
       boolean implicitStar = false;
       boolean isBool = parsePrimary(context);
       int tok = context.look();
@@ -498,7 +522,7 @@ public class Parser implements java.io.Serializable {
     *  Called as part of the parsing process.  From outside this class, this would
     *  probably be called only by a ParserExtension.
     */
-   boolean parsePrimary(ParserContext context) {
+   public boolean parsePrimary(ParserContext context) {
       boolean isBool = parseFactor(context);
       int tok = context.look();
       if (tok == ParserContext.OPCHARS && context.tokenString.equals("^")) {
@@ -516,7 +540,7 @@ public class Parser implements java.io.Serializable {
     *  Called as part of the parsing process.  From outside this class, this would
     *  probably be called only by a ParserExtension.
     */
-   boolean parseFactor(ParserContext context) {
+   public boolean parseFactor(ParserContext context) {
       boolean isBool = false;
       int tok = context.next();
       if (tok == ParserContext.NUMBER)

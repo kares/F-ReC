@@ -1,15 +1,14 @@
 
 package frec.jcm.draw;
 
-import frec.jcm.awt.*;
-import frec.jcm.draw.*;
-import frec.jcm.core.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.LinkedList;
 
-public class DrawingCanvas extends AbstractCanvas 
-{   
+// This class has beean added for F-ReC.
+
+public class DrawingCanvas extends AbstractCanvas {
+
    private CoordinateRect coords;
    private double xmin, xmax, ymin, ymax;
    private DrawGraph drawGraph;
@@ -35,7 +34,7 @@ public class DrawingCanvas extends AbstractCanvas
          addCoordinateRect(c);
    }
    
-   private transient LinkedList lineBuffer;
+   private LinkedList lineBuffer;
    
    public void add(DrawGraph drawGraph)
    {

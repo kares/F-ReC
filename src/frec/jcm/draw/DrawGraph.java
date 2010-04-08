@@ -1,30 +1,53 @@
+/*************************************************************************
+*                                                                        *
+*   1) This source code file, in unmodified form, and compiled classes   *
+*      derived from it can be used and distributed without restriction,  *
+*      including for commercial use.  (Attribution is not required       *
+*      but is appreciated.)                                              *
+*                                                                        *
+*    2) Modified versions of this file can be made and distributed       *
+*       provided:  the modified versions are put into a Java package     *
+*       different from the original package, edu.hws;  modified          *
+*       versions are distributed under the same terms as the original;   *
+*       and the modifications are documented in comments.  (Modification *
+*       here does not include simply making subclasses that belong to    *
+*       a package other than edu.hws, which can be done without any      *
+*       restriction.)                                                    *
+*                                                                        *
+*   David J. Eck                                                         *
+*   Department of Mathematics and Computer Science                       *
+*   Hobart and William Smith Colleges                                    *
+*   Geneva, New York 14456,   USA                                        *
+*   Email: eck@hws.edu          WWW: http://math.hws.edu/eck/            *
+*                                                                        *
+*************************************************************************/
 
 package frec.jcm.draw;
 
 import java.util.*;
-import frec.jcm.core.*;
+import frec.jcm.data.*;
 import java.awt.*;
 
+// This class has beean added for F-ReC.
+
 /**
- * This class has beean added for F-ReC.
  * A DrawGraph represents the graph the user draws using the mouse.
  * The object is drawn and might be shown in an arbitrary AbstractCanvas 
  * (as it extends Drawable), the possibility of drawing is implemented 
  * on a DrawableCanvas object.
  * A DrawGraph object consists of DrawLines, those are drawn every time
- * a graph is needed to be (re)drawn. Lines are always sorted from left
+ * a graph is required to be (re)drawn. Lines are always sorted from left
  * to right (from the lower x-values to the higher ones). 
  */
-
 public class DrawGraph extends Drawable
 {    
-    private ArrayList lines; // list storing the lines (DrawLine objects)
-    private transient ArrayList clone = null;
-    private transient boolean hasClone = false;
+    private final ArrayList lines; // list storing the lines (DrawLine objects)
+    //private transient ArrayList clone = null;
+    //private transient boolean hasClone = false;
     
     private boolean sorted = false;
     private double min_dom = 0, max_dom = 0; // domain parameters
-    private Color graphColor = Color.BLACK; //Color of the graph.
+    private Color graphColor = Color.BLACK; // Color of the graph lines
     
    /**
     * Create a DrawedGraph with no lines.  Lines will be
@@ -138,13 +161,13 @@ public class DrawGraph extends Drawable
         return new double[] {min_dom, max_dom};
     }
     
-    private synchronized void sortLines()
+    private void sortLines()
     {
         Collections.sort(lines);
         sorted = true;       
     } 
     
-    private synchronized void setDomain()
+    private void setDomain()
     {
         if (!sorted) sortLines();
         min_dom = ((DrawLine)lines.get(0)).x1;

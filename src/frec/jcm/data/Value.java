@@ -22,35 +22,20 @@
 *                                                                        *
 *************************************************************************/
 
-package frec.jcm.draw;
+package frec.jcm.data;
 
-import frec.jcm.data.*;
-
-// This class is from edu.hws.jcm.draw package without any modification.
+// This class is from edu.hws.jcm.data package without any modification.
 
 /**
- * A Crosshair is a small cross, 15 pixels wide and high, that is drawn in
- * a CoordinateRect at a specified point.
- * A Crosshair is a Computable object, so should be added to a Controller to be 
- * recomputed when the coordinates of the point change. 
+ * An object of type Value has a real-number value that can be retrieved by 
+ * calling the getVal() method.
+ * This is a central interface, since Value objects are used throughout the 
+ * JCM system where a real number is needed.
  */
-public class Crosshair extends DrawGeometric {
-
+public interface Value extends java.io.Serializable 
+{
    /**
-    * Create a cross that appears at the point with coordinates (x,y).
+    * Gets the current value of this object.
     */
-   public Crosshair(Value x, Value y) {
-      super(CROSS, x, y, 7, 7);
-   }
-   
-   /**
-    * Create a cross that appears on the graph of the function y=f(x)
-    * at the point with coordinates (x,f(x)).  f should be a function
-    * of one variable.
-    */
-   public Crosshair(Value x, Function f) {
-      super(CROSS, x, new ValueMath(f,x), 7, 7);
-   }
-   
+   public double getVal();      
 }
-

@@ -1,29 +1,26 @@
 
 package frec.jcm.draw;
 
-import java.awt.Color;
 import java.awt.Graphics;
 
-/**
- * This class has beean added for F-ReC.
- * GraphLine represents a line segment of a graph.
- * GraphLines are internally used by the DrawedGraph
- * class.
- */
+// This class has beean added for F-ReC.
 
-public class DrawLine extends Drawable 
-    implements Comparable{
+/**
+ * DrawLine represents a line segment of a graph.
+ * These lines are internally used by the DrawedGraph class.
+ */
+public class DrawLine extends Drawable implements Comparable {
         
    /**
     * Coordinates of the first (start) point of
-    * this GraphLine object. These coordinates
+    * this line. These coordinates
     * correspond to a Canvas (usually PaintCanvas).
     */    
     double x1, y1;
     
    /**
     * Coordinates of the second (end) point of
-    * this GraphLine object. These coordinates
+    * this line. These coordinates
     * correspond to a Canvas (usually PaintCanvas).
     */        
     double x2, y2;
@@ -32,11 +29,10 @@ public class DrawLine extends Drawable
     private int drawx2 = 0, drawy2;
     private boolean isArc = false;
     
-    private static CoordinateRect dfCoords;
+    private static CoordinateRect defaultCoords;
     
-    public static void setDefaultCoords(CoordinateRect coords)
-    {
-        dfCoords = coords;
+    public static void setDefaultCoords(CoordinateRect coords) {
+        defaultCoords = coords;
     }
     
    /**
@@ -48,7 +44,7 @@ public class DrawLine extends Drawable
         if (x1 <= x2)
         {
             if (coords==null)
-                if (dfCoords!=null) coords = dfCoords;
+                if ( defaultCoords != null ) coords = defaultCoords;
                 else throw new NullPointerException("no valid coords");
             
             this.x1 = coords.pixelToX(x1);
@@ -63,7 +59,7 @@ public class DrawLine extends Drawable
         else
         {
             if (coords==null)
-                if (dfCoords!=null) coords = dfCoords;
+                if ( defaultCoords != null ) coords = defaultCoords;
                 else throw new NullPointerException("no valid coords");
             
             this.x1 = coords.pixelToX(x2);
@@ -158,7 +154,7 @@ public class DrawLine extends Drawable
     {
         if (coordsChanged | (drawx1 == 1 && drawx2 ==0)) 
         {
-            if (coords==null) coords = dfCoords;
+            if (coords==null) coords = defaultCoords;
             drawx1 = coords.xToPixel(x1);
             drawx2 = coords.xToPixel(x2);
             drawy1 = coords.yToPixel(y1);

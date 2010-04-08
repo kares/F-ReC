@@ -22,35 +22,26 @@
 *                                                                        *
 *************************************************************************/
 
-package frec.jcm.draw;
+package frec.jcm.data;
 
-import frec.jcm.data.*;
-
-// This class is from edu.hws.jcm.draw package without any modification.
+// This interface is from edu.hws.jcm.data package without any modification.
 
 /**
- * A Crosshair is a small cross, 15 pixels wide and high, that is drawn in
- * a CoordinateRect at a specified point.
- * A Crosshair is a Computable object, so should be added to a Controller to be 
- * recomputed when the coordinates of the point change. 
+ * A MathObject is just an object that has setName and getName methods.
+ * MathObjects can be registered with a Parser (meaning that they are
+ * stored in the SymbolTable associated with the Parser, and can 
+ * be used in expressions parsed by the Parser).
  */
-public class Crosshair extends DrawGeometric {
-
+public interface MathObject extends java.io.Serializable {
    /**
-    * Create a cross that appears at the point with coordinates (x,y).
+    * Get the name of this object.
     */
-   public Crosshair(Value x, Value y) {
-      super(CROSS, x, y, 7, 7);
-   }
+   public String getName();
    
    /**
-    * Create a cross that appears on the graph of the function y=f(x)
-    * at the point with coordinates (x,f(x)).  f should be a function
-    * of one variable.
+    * Set the name of this object.  This should not be done if
+    * the MathObject is registered with a Parser.
     */
-   public Crosshair(Value x, Function f) {
-      super(CROSS, x, new ValueMath(f,x), 7, 7);
-   }
+   public void setName(String name);
    
-}
-
+} 

@@ -22,35 +22,34 @@
 *                                                                        *
 *************************************************************************/
 
-package frec.jcm.draw;
+package frec.jcm.data;
 
-import frec.jcm.data.*;
-
-// This class is from edu.hws.jcm.draw package without any modification.
+// This interface is from edu.hws.jcm.data package without any modification.
 
 /**
- * A Crosshair is a small cross, 15 pixels wide and high, that is drawn in
- * a CoordinateRect at a specified point.
- * A Crosshair is a Computable object, so should be added to a Controller to be 
- * recomputed when the coordinates of the point change. 
+ * A ParserExtension can be defined to add new capabilities to a
+ * standard Parser.  Examples include user-defined functions and
+ * summations (using a notation of the form "sum(i, 0, n, x^n/i!)").
+ * A ParserExtension is a MathObject, so it has a name and can be
+ * registered with a Parser.  When the Parser encounters the name
+ * in a string, it turns control of the parsing process over to
+ * the ParserExtension, which must parse any necessary arguments 
+ * and generate any ExpressionProgram commands.
+ *
  */
-public class Crosshair extends DrawGeometric {
-
+public interface ParserExtension extends MathObject {
    /**
-    * Create a cross that appears at the point with coordinates (x,y).
+    * Parses the part of an expression string associated with this ParserExtension.
+    * This method must add commands to context.prog that will generate exactly ONE
+    * number on the stack when they are executed.  Parsing routines from the Parse class,
+    * such as parseFactor and parseExpression, can be called
+    * to parse sub-parts of the string.  The name of the command
+    * has already been read from the ParseContext when doParse() is called. 
+    *    (At the time this is called, context.tokenString is the 
+    * name under which this ParserExtension was registered with the 
+    * Parser.  This makes it possible to register the same ParserExtension
+    * under several names, with each name represnting a different
+    * meaning.)
     */
-   public Crosshair(Value x, Value y) {
-      super(CROSS, x, y, 7, 7);
-   }
-   
-   /**
-    * Create a cross that appears on the graph of the function y=f(x)
-    * at the point with coordinates (x,f(x)).  f should be a function
-    * of one variable.
-    */
-   public Crosshair(Value x, Function f) {
-      super(CROSS, x, new ValueMath(f,x), 7, 7);
-   }
-   
+   public void doParse(Parser parser, ParserContext context);
 }
-

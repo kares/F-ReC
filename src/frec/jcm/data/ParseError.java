@@ -22,35 +22,30 @@
 *                                                                        *
 *************************************************************************/
 
-package frec.jcm.draw;
+package frec.jcm.data;
 
-import frec.jcm.data.*;
-
-// This class is from edu.hws.jcm.draw package without any modification.
+// This class is from edu.hws.jcm.data package without any modification.
 
 /**
- * A Crosshair is a small cross, 15 pixels wide and high, that is drawn in
- * a CoordinateRect at a specified point.
- * A Crosshair is a Computable object, so should be added to a Controller to be 
- * recomputed when the coordinates of the point change. 
+ * Represents a syntax error that is found while a string is being parsed.
  */
-public class Crosshair extends DrawGeometric {
+public class ParseError extends RuntimeException {
 
    /**
-    * Create a cross that appears at the point with coordinates (x,y).
+    * The parsing context that was in effect
+    * at the time the error occurred.  This includes
+    * the string that was being processed and the
+    * position in the string where the error occured.
+    * These values are context.data and context.pos.
     */
-   public Crosshair(Value x, Value y) {
-      super(CROSS, x, y, 7, 7);
-   }
-   
+   public ParserContext context;
+      
    /**
-    * Create a cross that appears on the graph of the function y=f(x)
-    * at the point with coordinates (x,f(x)).  f should be a function
-    * of one variable.
+    * Create a new ParseError with a given error message and parsing context.
     */
-   public Crosshair(Value x, Function f) {
-      super(CROSS, x, new ValueMath(f,x), 7, 7);
+   public ParseError(String message, ParserContext context) { 
+      super(message);
+      this.context = context;
    }
-   
+
 }
-

@@ -1,13 +1,37 @@
+/*************************************************************************
+*                                                                        *
+*   1) This source code file, in unmodified form, and compiled classes   *
+*      derived from it can be used and distributed without restriction,  *
+*      including for commercial use.  (Attribution is not required       *
+*      but is appreciated.)                                              *
+*                                                                        *
+*    2) Modified versions of this file can be made and distributed       *
+*       provided:  the modified versions are put into a Java package     *
+*       different from the original package, edu.hws;  modified          *
+*       versions are distributed under the same terms as the original;   *
+*       and the modifications are documented in comments.  (Modification *
+*       here does not include simply making subclasses that belong to    *
+*       a package other than edu.hws, which can be done without any      *
+*       restriction.)                                                    *
+*                                                                        *
+*   David J. Eck                                                         *
+*   Department of Mathematics and Computer Science                       *
+*   Hobart and William Smith Colleges                                    *
+*   Geneva, New York 14456,   USA                                        *
+*   Email: eck@hws.edu          WWW: http://math.hws.edu/eck/            *
+*                                                                        *
+*************************************************************************/
 
 package frec.jcm.draw;
 
 import java.awt.*;
 import java.awt.event.*;
-import frec.jcm.core.*;
+import frec.jcm.data.*;
 import frec.jcm.awt.*;
 
+// This class is from edu.hws.jcm.draw package without any modification.
+
 /**
- * This class is from edu.hws.jcm.draw package without any modification.
  * A DraggablePoint can be added to a DisplayCanvas, where it appears as a small disk, square, or
  * cross.  (The visual style is a settable property.)  This object can be dragged with the mouse,
  * within the limits of the CoordinateRect that contains the DraggablePoint.  Either the x- or
