@@ -51,6 +51,22 @@ public class FunctionTree extends LimitedTree {
         return instance;
     }
 
+    public static double getConstantMin() {
+        return FunctionTree.constantMin;
+    }
+
+    public static void setConstantMin(double min) {
+        FunctionTree.constantMin = min;
+    }
+
+    public static void setConstantMax(double max) {
+        FunctionTree.constantMax = max;
+    }
+
+    public static double getConstantMax() {
+        return FunctionTree.constantMax;
+    }
+
     public static FunctionTree parse(final String formatted) {
         throw new UnsupportedOperationException("parse() NOT IMPLEMETED !");
     }

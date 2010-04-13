@@ -151,18 +151,10 @@ public abstract class AbstractCanvas extends Canvas
     * entire canvas.
     */
    public void add(Drawable d) {
-      if (coordinateRects == null)
-         addCoordinateRect(new CoordinateRect());
+      if (coordinateRects == null) addCoordinateRect(new CoordinateRect());
       CoordinateRect c = ((CRData)coordinateRects.elementAt(0)).coords;
       c.add(d);
    }
-   
-   public void add(DrawGraph drawGraph)
-   {
-       CoordinateRect coords = this.getCoordinateRect();
-       drawGraph.setCoords(coords);
-       add((Drawable)drawGraph);
-   }   
    
    public void rem(Drawable d) {
       CoordinateRect c = ((CRData)coordinateRects.elementAt(0)).coords;

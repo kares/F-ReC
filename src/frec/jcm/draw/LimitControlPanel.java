@@ -116,7 +116,7 @@ public class LimitControlPanel extends Panel implements InputObject, Tieable, Li
              " Equalize  Axes ",
              "    Zoom  In    ",
              "    Zoom Out    "
-           };
+    };
             
    /**
     * Set of installed buttons.

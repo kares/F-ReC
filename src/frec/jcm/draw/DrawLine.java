@@ -39,14 +39,12 @@ public class DrawLine extends Drawable implements Comparable {
     * Constructs a new GraphLine object using the
     * included coordinates.
     */        
-    public DrawLine(int x1, int y1, int x2, int y2) 
-    {
-        if (x1 <= x2)
-        {
-            if (coords==null)
+    public DrawLine(int x1, int y1, int x2, int y2) {
+        if ( x1 <= x2 ) {
+            if ( coords == null ) {
                 if ( defaultCoords != null ) coords = defaultCoords;
                 else throw new NullPointerException("no valid coords");
-            
+            }
             this.x1 = coords.pixelToX(x1);
             this.y1 = coords.pixelToY(y1);
             this.x2 = coords.pixelToX(x2);
@@ -56,12 +54,11 @@ public class DrawLine extends Drawable implements Comparable {
             drawy1 = y1;
             drawy2 = y2;
         }
-        else
-        {
-            if (coords==null)
+        else {
+            if ( coords == null ) {
                 if ( defaultCoords != null ) coords = defaultCoords;
                 else throw new NullPointerException("no valid coords");
-            
+            }
             this.x1 = coords.pixelToX(x2);
             this.y1 = coords.pixelToY(y2);
             this.x2 = coords.pixelToX(x1);
@@ -77,17 +74,14 @@ public class DrawLine extends Drawable implements Comparable {
     * Constructs a new GraphLine object using the
     * included coordinates.
     */        
-    public DrawLine(double x1, double y1, double x2, double y2) 
-    {
-        if (x1 <= x2)
-        {   
+    public DrawLine(double x1, double y1, double x2, double y2) {
+        if (x1 <= x2) {
             this.x1 = x1;
             this.y1 = y1;
             this.x2 = x2;
             this.y2 = y2;
         }
-        else
-        {
+        else {
             this.x1 = x2;
             this.y1 = y2;
             this.x2 = x1;
@@ -99,19 +93,15 @@ public class DrawLine extends Drawable implements Comparable {
     * Constructs a new GraphLine object using the
     * included coordinates.
     */        
-    public DrawLine(double x1, double y1, double x2, double y2, CoordinateRect coords) 
-    {
+    public DrawLine(double x1, double y1, double x2, double y2, CoordinateRect coords) {
         this.coords = coords;
-        
-        if (x1 <= x2)
-        {   
+        if (x1 <= x2) {
             this.x1 = x1;
             this.y1 = y1;
             this.x2 = x2;
             this.y2 = y2;
         }
-        else
-        {
+        else {
             this.x1 = x2;
             this.y1 = y2;
             this.x2 = x1;
@@ -119,22 +109,19 @@ public class DrawLine extends Drawable implements Comparable {
         } 
     }        
     
-    public static DrawLine getArcInstance(int x1, int y1, int x2, int y2)
-    {
+    public static DrawLine getArcInstance(int x1, int y1, int x2, int y2) {
         DrawLine arcLine = new DrawLine(x1, y1, x2, y2);
         arcLine.isArc = true;
         return arcLine;
     }
     
-    public static DrawLine getArcInstance(double x1, double y1, double x2, double y2)
-    {
+    public static DrawLine getArcInstance(double x1, double y1, double x2, double y2) {
         DrawLine arcLine = new DrawLine(x1, y1, x2, y2);
         arcLine.isArc = true;
         return arcLine;
     }    
     
-    public static DrawLine getArcInstance(double x1, double y1, double x2, double y2, CoordinateRect coords)
-    {
+    public static DrawLine getArcInstance(double x1, double y1, double x2, double y2, CoordinateRect coords) {
         DrawLine arcLine = new DrawLine(x1, y1, x2, y2, coords);
         arcLine.isArc = true;
         return arcLine;
@@ -150,11 +137,9 @@ public class DrawLine extends Drawable implements Comparable {
     * @param coordsChanged Indicates whether the CoordinateRect has changed
     *                      (has no effect here).
     */    
-    public void draw(Graphics g, boolean coordsChanged)
-    {
-        if (coordsChanged | (drawx1 == 1 && drawx2 ==0)) 
-        {
-            if (coords==null) coords = defaultCoords;
+    public void draw(Graphics g, boolean coordsChanged) {
+        if ( coordsChanged | (drawx1 == 1 && drawx2 ==0) ) {
+            if ( coords == null ) coords = defaultCoords;
             drawx1 = coords.xToPixel(x1);
             drawx2 = coords.xToPixel(x2);
             drawy1 = coords.yToPixel(y1);
@@ -176,12 +161,9 @@ public class DrawLine extends Drawable implements Comparable {
      *         from being compared to this Object (in this case if they are not
      *         both instance of the same class).
      */    
-    public int compareTo(Object o) 
-    {
-        if (!(o instanceof DrawLine))
-            throw new ClassCastException("invalid object type");        
-        if (this.x1 < ((DrawLine)o).x1) return -1;
-        if (this.x1 > ((DrawLine)o).x1) return +1;
+    public int compareTo(Object o) {
+        if (this.x1 < ((DrawLine) o).x1) return -1;
+        if (this.x1 > ((DrawLine) o).x1) return +1;
         return 0;
     }
     
@@ -190,8 +172,7 @@ public class DrawLine extends Drawable implements Comparable {
     *
     * @ param coords The CoordinateRect to be set.
     */    
-    public void setCoords(CoordinateRect coords)
-    {
+    public void setCoords(CoordinateRect coords) {
         this.coords = coords;
     }    
     

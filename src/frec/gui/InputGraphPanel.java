@@ -14,7 +14,7 @@ import javax.swing.*;
  */
 public class InputGraphPanel extends JCMPanel {
 
-    private final DrawingCanvas canvas;
+    private final DrawingCanvas drawCanvas;
     private DrawGraph drawGraph;
     private final LimitControlPanel controlPanel;
     private final Parser parser;
@@ -25,7 +25,8 @@ public class InputGraphPanel extends JCMPanel {
     private final Grid grid;
     private Crosshair crosshair;
     private DrawString info;
-    private final JButton graphFunction;
+    private final JButton doneButton;
+    private final JButton showGraphButton;
     private double[] axisLimits;
 
     private float[] dataX, dataY;
@@ -41,26 +42,32 @@ public class InputGraphPanel extends JCMPanel {
         parser = new Parser();
         parser.add(x);
 
-        canvas = new DrawingCanvas();
-        canvas.add(new Panner());
+        drawCanvas = new DrawingCanvas();
+        drawCanvas.add(new Panner());
 
         controlPanel = new LimitControlPanel(LimitControlPanel.ALL_BUTTONS);
-        controlPanel.addCoords(canvas);
+        controlPanel.addCoords(drawCanvas);
+
+        final DrawListener drawListener = new DrawListener();
+        drawCanvas.addMouseListener(drawListener);
+        drawCanvas.addMouseMotionListener(drawListener);
 
         graph = new Graph();
         grid = new Grid();
         grid.setVisible(false);
-        canvas.add(grid);
+        drawCanvas.add(grid);
 
         final JRadioButton showGrid = new JRadioButton("Show Grid");
         showGrid.addActionListener(new ActionListener() {
 
             public void actionPerformed(ActionEvent evt) {
-                grid.setVisible( ! showGrid.isSelected() );
+                grid.setVisible( showGrid.isSelected() );
             }
+            
         });
         controlPanel.addComponent(showGrid);
 
+        /*
         final JRadioButton showFunction = new JRadioButton("Show Func");
         showFunction.addActionListener(new ActionListener() {
 
@@ -79,74 +86,72 @@ public class InputGraphPanel extends JCMPanel {
             }
         });
         controlPanel.addComponent(showFunction);
+        */
 
-        final JButton clear = new JButton("Clear");
-        clear.addActionListener(new ActionListener() {
+        final JButton clearButton = new JButton("Clear");
+        clearButton.addActionListener(new ActionListener() {
 
             public void actionPerformed(ActionEvent evt) {
-                drawGraph.deleteLines();
-                canvas.setNewDrawing();
-                canvas.doRedraw(0);
+                drawCanvas.resetDrawing();
+                drawCanvas.doRedraw(0);
             }
-        });
-        controlPanel.addComponent(clear);
 
-        final JButton done = new JButton("Done");
-        done.addActionListener(new ActionListener() {
+        });
+        controlPanel.addComponent(clearButton);
+
+        doneButton = new JButton("Done");
+        doneButton.addActionListener(new ActionListener() {
 
             public void actionPerformed(ActionEvent evt) {
                 storeData();
                 setAxisLimits();
-                canvas.releaseResources();
+                drawCanvas.releaseResources();
             }
+            
         });
-        controlPanel.addComponent(done);
+        doneButton.setEnabled(false);
+        controlPanel.addComponent(doneButton);
 
-        graphFunction = new JButton("GRAPH");
-        graphFunction.addActionListener(new ActionListener() {
+        showGraphButton = new JButton("Graph");
+        final ActionListener showGraphHandler = new ActionListener() {
 
             public void actionPerformed(ActionEvent evt) {
-                if (showFunction.isSelected()) {
-                    showFunction();
-                    canvas.repaint();
+                showFunction();
+            }
+            
+        };
+        showGraphButton.addActionListener(showGraphHandler);
+
+        drawGraph = new DrawGraph();
+        //drawGraph.setCoords(coords);
+        drawCanvas.add(drawGraph);
+
+        input = new ExpressionInput();
+        input.setParser(parser);
+        input.setEditable(false);
+        //input.setText(" ... click \"Show Func\" insert \"Function Expression (f(x))\" here and click \"GRAPH\" ... ");
+        final String inputText =
+                " HINT: type function expression (e.g. sin(x)) here and click '"+ showGraphButton.getText() +"' to show graph ";
+        input.setText(inputText);
+        input.addMouseListener(new MouseAdapter() {
+
+            public void mouseClicked(MouseEvent e) {
+                if (inputText.equals(input.getText())) {
+                    input.setText("");
+                    input.setEditable(true);
                 }
             }
+
         });
+        // handle pressing enter in the TextField :
+        input.addActionListener(showGraphHandler);
 
+        CoordinateRect coords = drawCanvas.getCoordinateRect();
+        xSlider = new VariableSlider(coords.getValueObject(CoordinateRect.XMIN),
+                coords.getValueObject(CoordinateRect.XMAX));
+        xSlider.setEnabled(false);
+        
         init();
-    }
-
-    /**
-     * Method which indicates that this panel
-     * already has the input hasData needed to compute.
-     */
-    public boolean hasData() {
-        return hasData;
-    }
-
-    private void showFunction() {
-        input.setParser(parser);
-        input.checkInput();
-        Function func = input.getFunction(x);
-        graph.setFunction(func);
-        info.setString("x = #\nf(x) = #");
-        info.setValues(new Value[]{xSlider, new ValueMath(func, xSlider)});
-
-        info.setFont(new Font("SansSerif", Font.BOLD, 12));
-        info.setColor(new Color(0, 100, 0));
-        info.setOffset(10);
-        canvas.add(graph);
-        crosshair = new Crosshair(xSlider, func);
-        canvas.add(crosshair);
-    }
-
-    private void removeFunction() {
-        input.setParser(null);
-        graph.setFunction(null);
-        canvas.rem(graph);
-        canvas.rem(crosshair);
-        info.setString("x = \nf(x) = ");
-        crosshair = null;
     }
 
     /**
@@ -154,26 +159,13 @@ public class InputGraphPanel extends JCMPanel {
      * is needed for the panel to be shown.
      */
     private void init() {
-        CoordinateRect coords = canvas.getCoordinateRect();
-
-        drawGraph = new DrawGraph();
-        //drawGraph.setCoords(coords);
-        canvas.add(drawGraph);
-
-        input = new ExpressionInput();
-        input.setEditable(false);
-        ((TextField) input).setText(" ... click \"Show Func\" insert \"Function Expression (f(x))\" here and click \"GRAPH\" ... ");
-        VariableInput xInput = new VariableInput();
-
-        xSlider = new VariableSlider(coords.getValueObject(CoordinateRect.XMIN),
-                coords.getValueObject(CoordinateRect.XMAX));
-        xSlider.setEnabled(false);
+        final VariableInput xInput = new VariableInput();
 
         //setBackground(Color.lightGray);
 
         JCMPanel topLeft = new JCMPanel(new FlowLayout());
         topLeft.setInsetGap(2);
-        topLeft.add(new JLabel(" Showing: f(x) = "));
+        topLeft.add(new JLabel(" Sample Function: f(x) = "));
 
         JCMPanel topCenter = new JCMPanel();
         topCenter.setInsetGap(3);
@@ -181,11 +173,11 @@ public class InputGraphPanel extends JCMPanel {
 
         JCMPanel topRight = new JCMPanel(new FlowLayout());
         //topRight.setInsetGap(1);
-        topRight.add(graphFunction);
+        topRight.add(showGraphButton);
 
         JCMPanel center = new JCMPanel();
         center.setInsetGap(3);
-        center.add(canvas);
+        center.add(drawCanvas);
 
         JCMPanel botCenter = new JCMPanel();
         botCenter.setInsetGap(3);
@@ -197,7 +189,7 @@ public class InputGraphPanel extends JCMPanel {
 
         GridBagLayout layout = new GridBagLayout();
         GridBagConstraints c = new GridBagConstraints();
-        this.setLayout(layout);
+        setLayout(layout);
 
         c.fill = GridBagConstraints.BOTH;
         c.weightx = 0.05;
@@ -205,19 +197,19 @@ public class InputGraphPanel extends JCMPanel {
         c.gridheight = 1;
 
         layout.setConstraints(topLeft, c);
-        this.add(topLeft);
+        add(topLeft);
 
         c.weightx = 0.90;
         c.gridwidth = GridBagConstraints.RELATIVE;
 
         layout.setConstraints(topCenter, c);
-        this.add(topCenter);
+        add(topCenter);
 
         c.weightx = 0.05;
         c.gridwidth = GridBagConstraints.REMAINDER; //end row
 
         layout.setConstraints(topRight, c);
-        this.add(topRight);
+        add(topRight);
 
         c.weightx = 0.00;
         c.weighty = 0.90;
@@ -225,43 +217,90 @@ public class InputGraphPanel extends JCMPanel {
         c.gridwidth = GridBagConstraints.RELATIVE;
 
         layout.setConstraints(center, c);
-        this.add(center);
+        add(center);
 
         c.gridwidth = GridBagConstraints.REMAINDER; //end row
         layout.setConstraints(controlPanel, c);
-        this.add(controlPanel);
+        add(controlPanel);
 
         c.weighty = 0.00;
         c.gridheight = 1;
         c.gridwidth = GridBagConstraints.RELATIVE;
 
         layout.setConstraints(botCenter, c);
-        this.add(botCenter);
+        add(botCenter);
 
         c.gridwidth = GridBagConstraints.REMAINDER; //end row
 
         layout.setConstraints(botRight, c);
-        this.add(botRight);
+        add(botRight);
 
-        canvas.add(new Axes("X", "Y"));  // Add a set of axes to the DisplayCanvas.
-        canvas.add(new DrawBorder(Color.darkGray, 3));  // Add a 2-pixel dark gray border around
+        drawCanvas.add(new Axes("X", "Y"));  // Add a set of axes to the DisplayCanvas.
+        drawCanvas.add(new DrawBorder(Color.darkGray, 3));  // Add a 2-pixel dark gray border around
         //   edges of the canvas.
 
         info = new DrawString("x = \nf(x) = ", DrawString.TOP_LEFT);
-
         info.setFont(new Font("SansSerif", Font.BOLD, 12));
         info.setColor(new Color(0, 100, 0));
         info.setOffset(10);
-        canvas.add(info);  // Add the DrawString to the canvas.
+        drawCanvas.add(info);  // Add the DrawString to the canvas.
 
-        this.gatherInputs();
+        gatherInputs();
 
-        Controller controller = this.getController();
-
+        CoordinateRect coords = drawCanvas.getCoordinateRect();
+        final Controller controller = getController();
         coords.setOnChange(controller);
         controller.add(new Tie(xSlider, xInput));
 
     }  // end init()
+
+    /**
+     * Method which indicates that this panel
+     * already has the input hasData needed to compute.
+     */
+    public boolean hasData() {
+        return hasData;
+    }
+
+    private transient Color validInputBackground = null;
+
+    private void showFunction() {
+        input.checkInput();
+        final Color invalidColor = Color.RED;
+        if ( input.getErrorMessage() == null ) {
+            if (invalidColor.equals(input.getBackground())) {
+                input.setBackground(validInputBackground);
+            }
+            Function func = input.getFunction(x);
+            graph.setFunction(func);
+            info.setString("x = #\nf(x) = #");
+            info.setValues(new Value[]{xSlider, new ValueMath(func, xSlider)});
+            //info.setFont(new Font("SansSerif", Font.BOLD, 12));
+            //info.setColor(new Color(0, 100, 0));
+            //info.setOffset(10);
+            drawCanvas.add(graph);
+            crosshair = new Crosshair(xSlider, func);
+            drawCanvas.add(crosshair);
+            drawCanvas.repaint();
+        }
+        else {
+            Color inputColor = input.getBackground();
+            if ( ! invalidColor.equals(inputColor) ) {
+                validInputBackground = inputColor;
+                input.setBackground(invalidColor);
+                // TODO show error message
+            }
+        }
+    }
+
+    private void removeFunction() {
+        input.setParser(null);
+        graph.setFunction(null);
+        drawCanvas.rem(graph);
+        drawCanvas.rem(crosshair);
+        info.setString("x = \nf(x) = ");
+        crosshair = null;
+    }
 
     /**
      * Get the <code>DrawedGraph</code> object which is
@@ -300,11 +339,16 @@ public class InputGraphPanel extends JCMPanel {
 
     public void storeData() {
         FunctionPoint[] fp = drawGraph.getFunctionPoints(dataSize);
-        for (int i = 0; i < fp.length; i++) {
-            dataX[i] = (float) fp[i].getArgumentValue();
-            dataY[i] = (float) fp[i].getFunctionValue();
+        if ( fp != null && fp.length > 0 ) {
+            for (int i = 0; i < fp.length; i++) {
+                dataX[i] = (float) fp[i].getArgumentValue();
+                dataY[i] = (float) fp[i].getFunctionValue();
+            }
+            hasData = true;
         }
-        hasData = true;
+        else {
+            hasData = false;
+        }
     }
 
     public float[] getDataX() {
@@ -317,6 +361,39 @@ public class InputGraphPanel extends JCMPanel {
         if ( ! hasData )
             throw new IllegalStateException("data not yet stored");
         return dataY;
+    }
+
+    private void checkGraphLines() {
+        if ( ! drawGraph.isEmpty() ) {
+            doneButton.setEnabled(true);
+        }
+        else {
+            doneButton.setEnabled(false);
+        }
+    }
+
+    private class DrawListener extends MouseAdapter {
+
+        public void mouseClicked(MouseEvent e) {
+            checkGraphLines();
+        }
+
+        public void mousePressed(MouseEvent e) {
+            checkGraphLines();
+        }
+
+        public void mouseReleased(MouseEvent e) {
+            checkGraphLines();
+        }
+
+        public void mouseEntered(MouseEvent e) {
+            checkGraphLines();
+        }
+
+        public void mouseExited(MouseEvent e) {
+            checkGraphLines();
+        }
+        
     }
 
 } // end class SimpleGraph

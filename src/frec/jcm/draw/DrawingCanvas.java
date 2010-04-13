@@ -1,18 +1,27 @@
 
 package frec.jcm.draw;
 
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.AWTEvent;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.event.MouseEvent;
+
+import java.util.List;
 import java.util.LinkedList;
 
 // This class has beean added for F-ReC.
 
 public class DrawingCanvas extends AbstractCanvas {
 
-   private CoordinateRect coords;
-   private double xmin, xmax, ymin, ymax;
+   //private CoordinateRect coords;
    private DrawGraph drawGraph;
            
+   private transient boolean dragg = false, press = false;
+   private transient int lastX, lastY;
+
+   private List lineBuffer;
+
    /**
     * Create a DrawCanvas with a white background containing no CoordinateRects.
     */   
@@ -34,17 +43,16 @@ public class DrawingCanvas extends AbstractCanvas {
          addCoordinateRect(c);
    }
    
-   private LinkedList lineBuffer;
-   
-   public void add(DrawGraph drawGraph)
-   {
+   public void add(DrawGraph drawGraph) {
        super.add(drawGraph);
        this.drawGraph = drawGraph;
        lineBuffer = new LinkedList();
+       if (drawGraph != null) {
+           drawGraph.setCoords(getCoordinateRect());
+       }
    }
-   
-   private void setGraphics(Graphics g)
-   {
+
+   private void setGraphics(Graphics g) {
        g.setColor(Color.MAGENTA.darker());
        g.setFont(g.getFont().deriveFont(Font.PLAIN, 10));
    }
@@ -54,61 +62,42 @@ public class DrawingCanvas extends AbstractCanvas {
     * Not meant to be called directly.
     */
    public void processMouseEvent(MouseEvent evt) {
-         // If an error message is displayed, get rid of it and
-         // ignore the mouse click.
+      if ( drawGraph == null ) {
+          throw new IllegalStateException("no draw graph added !");
+      }
+      // If an error message is displayed, get rid of it and ignore the mouse click.
       if (evt.getID() == MouseEvent.MOUSE_PRESSED) {
-          if (press)
-          {
-            int x = evt.getX();
-            int y = evt.getY();
-            Graphics graphics = getGraphics();
-            graphics.drawLine(lastX, lastY, x, y);
-            drawGraph.addLine(lastX, lastY, x, y);
-            lastX = x;
-            lastY = y;                
-            press = false;
-          }
+            if (press) {
+                int x = evt.getX();
+                int y = evt.getY();
+                Graphics graphics = getGraphics();
+                graphics.drawLine(lastX, lastY, x, y);
+                drawGraph.addLine(lastX, lastY, x, y);
+                lastX = x;
+                lastY = y;
+                press = false;
+            }
             dragg = false;
             lastX = evt.getX();
             lastY = evt.getY();
             press = true;
-
-          if (errorMessage != null) 
-          {
-             if (errorSource != null)
-                errorSource.errorCleared();
-             errorSource = null;
-             errorMessage = null;
-             repaint();
-             evt.consume();
-             return;
-         }
-         evt.consume();
-         return;
+            if (errorMessage != null) {
+                if (errorSource != null) errorSource.errorCleared();
+                errorSource = null;
+                errorMessage = null;
+                repaint();
+            }
+            //evt.consume();
       }
-      else 
-      if (evt.getID() == MouseEvent.MOUSE_RELEASED) {
-         if (dragg)
-         {
+      else if (evt.getID() == MouseEvent.MOUSE_RELEASED) {
+         if (dragg) {
              drawGraph.addLines(lineBuffer);
              lineBuffer.clear();
              press = true;
          }
-         evt.consume();
-         return;
+         //evt.consume();
       }
-      else super.processMouseEvent(evt);
-   }
-   
-   /**
-    * This methods sets the canvas's painting state to
-    * the initial state, meaning that a new painting may
-    * be started.
-    */   
-   public void setNewDrawing()
-   {
-       press = false;
-       dragg = false;
+      super.processMouseEvent(evt);
    }
    
    /**
@@ -116,10 +105,11 @@ public class DrawingCanvas extends AbstractCanvas {
     * Not meant to be called directly.
     */
    public void processMouseMotionEvent(MouseEvent evt) {
-      if (evt.getID() == MouseEvent.MOUSE_DRAGGED)
-      {
-          if (press)
-          {
+      if ( drawGraph == null ) {
+          throw new IllegalStateException("no draw graph added !");
+      }
+      if (evt.getID() == MouseEvent.MOUSE_DRAGGED) {
+          if (press) {
               dragg = true;
               press = false;
           }
@@ -127,18 +117,24 @@ public class DrawingCanvas extends AbstractCanvas {
           int y = evt.getY();
           Graphics graphics = getGraphics();
           graphics.drawLine(lastX, lastY, x, y);
-          lineBuffer.add(
-            DrawLine.getArcInstance(lastX, lastY, x, y));
+          lineBuffer.add(DrawLine.getArcInstance(lastX, lastY, x, y));
           lastX = x;
           lastY = y;
-          evt.consume();
-          return;
+          //evt.consume();
       }
-      else super.processMouseMotionEvent(evt);
+      super.processMouseMotionEvent(evt);
    }
-   
-   private transient boolean dragg = false, press = false;
-   private transient int lastX, lastY;
-   
+
+   /**
+    * This methods sets the canvas's painting state to
+    * the initial state, meaning that a new painting may
+    * be started.
+    */
+   public void resetDrawing() {
+       press = false;
+       dragg = false;
+       if ( drawGraph != null ) drawGraph.deleteLines();
+   }
+
 } // end class DrawingCanvas
 

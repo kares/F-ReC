@@ -150,7 +150,7 @@ public class ExpressionInput extends TextField implements InputObject, Value {
     * @param p parser to register with user's input strings.
     */
    public void setParser(Parser p) {
-      parser = (p == null)? new Parser() : p;
+      parser = (p == null) ? new Parser() : p;
       hasChanged = true;  // force re-compute when checkInput() is next called.
    }
    
@@ -287,8 +287,7 @@ public class ExpressionInput extends TextField implements InputObject, Value {
     * method is called; it DOES NOT change continuously as the user types.
     */
    public void checkInput() {
-      if (!hasChanged)
-         return;
+      if (!hasChanged) return;
       expr.serialNumber++;
       String contents = getText();
       try {
@@ -338,7 +337,7 @@ public class ExpressionInput extends TextField implements InputObject, Value {
                             || ch == KeyEvent.VK_DELETE || ch == KeyEvent.VK_SPACE 
                             || ch == KeyEvent.VK_BACK_SPACE;
          boolean useControl = use || ch == KeyEvent.VK_TAB 
-                                  || ch ==KeyEvent.VK_ENTER || chr == 0;
+                                  || ch == KeyEvent.VK_ENTER || chr == 0;
          if (!useControl) {
             evt.consume();
             Toolkit.getDefaultToolkit().beep();

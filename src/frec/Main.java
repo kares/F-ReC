@@ -11,6 +11,7 @@ import java.awt.event.ActionListener;
 import javax.swing.*;
 
 public class Main extends JApplet implements Runnable {
+    
     /*
     static {
         JFrame.setDefaultLookAndFeelDecorated(true); 
@@ -18,16 +19,16 @@ public class Main extends JApplet implements Runnable {
     }
     */
 
-    private static final String VERSION = "1.6";
-    private static final String APP_NAME = "F-ReC " + VERSION;
+    static final String VERSION = "1.6";
+    static final String APP_NAME = "F-ReC " + VERSION;
     
-    private GenetixSetting setting;
+    private GenetixSettings settings;
     private InputGraphPanel input;
     private OutputGraphPanel output;
     private DrawGraph graph;
-    private JFrame gui, set;
-    private JDialog dialog;
-    private GenetixProgress progress;
+    private JFrame appFrame;
+    private JDialog settingsDialog;
+    private JDialog progressDialog;
     private boolean savingEnabled;
 
     public void init() {
@@ -39,24 +40,32 @@ public class Main extends JApplet implements Runnable {
             }
             
         };
+        appFrame = new JFrame(APP_NAME);
+        appFrame.getContentPane().add(input);
+        appFrame.setResizable(true);
+        appFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        setting = new GenetixSetting();
-        setting.setReadyListener(new ActionListener() {
+        settings = new GenetixSettings();
+        configureSettings();
+        settings.setReadyListener(new ActionListener() {
 
             public void actionPerformed(ActionEvent e) {
+                settingsDialog.setVisible(false);
                 settingsReady();
             }
-            
-        });
 
-        set = new JFrame(APP_NAME);
-        set.getContentPane().add(setting);
-        set.setResizable(false);
-        
-        gui = new JFrame(APP_NAME);
-        gui.getContentPane().add(input);
-        gui.setResizable(true);
-        dialog = new JDialog(gui, "Please Wait ...");        
+        });
+        settings.setCancelListener(new ActionListener() {
+
+            public void actionPerformed(ActionEvent e) {
+                settingsDialog.setVisible(false);
+                //settingsDialog.dispose();
+            }
+
+        });
+        settingsDialog = new JDialog(appFrame, "Settings", true);
+        settingsDialog.setContentPane(settings);
+        settingsDialog.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
     }
 
     public void start() {
@@ -67,16 +76,24 @@ public class Main extends JApplet implements Runnable {
         savingEnabled = true;
     }
 
-    void enableClose() {
-        gui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        set.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    }
-
     private Genetix genetix;
+
+    private void configureSettings() {
+        // set-up some defaults :
+        settings.setDataSize(300);
+        settings.setGenSize(100);
+        settings.setGenMax(100);
+        //settings.setMinFunctionLength(FunctionTree.getCodeElementMin());
+        //settings.setMaxFunctionLength(FunctionTree.getCodeElementMax());
+        settings.setGenMutationProbability(0.030F);
+        settings.setGenCrossingProbability(0.900F);
+        settings.setGenReproductProbability(0.950F);
+        settings.setGenSelectionProbability(0.850F);
+    }
 
     private void settingsReady() {
         try {
-            genetix = (Genetix) setting.getSelModelClass().newInstance();
+            genetix = (Genetix) settings.getSelectedModelClass().newInstance();
         }
         catch (InstantiationException ex) {
             throw new RuntimeException(ex);
@@ -86,21 +103,20 @@ public class Main extends JApplet implements Runnable {
         }
 
         if (genetix instanceof GPModelGenetix) {
-            ((GPModelGenetix) genetix).setReproductProbability(setting.getGenReproductProb());
-            ((GPModelGenetix) genetix).setSelectionProbability(setting.getGenSelectionProb());
+            ((GPModelGenetix) genetix).setReproductProbability(settings.getGenReproductProbability());
+            ((GPModelGenetix) genetix).setSelectionProbability(settings.getGenSelectionProbability());
         }
         genetix.setSavingMode(savingEnabled);
-        genetix.setGenerationSize(setting.getGenSize());
-        genetix.setGenerationLimit(setting.getGenMax());
-        genetix.setMutationProbability(setting.getGenMutationProb());
-        genetix.setCrossingProbability(setting.getGenCrossingProb());
-        genetix.setArbitraryMutations(setting.getArbitraryMutationsUsage());
-        genetix.setArbitraryCrossings(setting.getArbitraryCrossingsUsage());
-        input.setDataSize(setting.getDataSize());
+        genetix.setGenerationSize(settings.getGenSize());
+        genetix.setGenerationLimit(settings.getGenMax());
+        genetix.setMutationProbability(settings.getGenMutationProbability());
+        genetix.setCrossingProbability(settings.getGenCrossingProbability());
+        genetix.setArbitraryMutations(settings.isArbitraryMutations());
+        genetix.setArbitraryCrossings(settings.isArbitraryCrossings());
+        input.setDataSize(settings.getDataSize());
 
-        set.dispose();
-        gui.pack();
-        gui.setVisible(true);
+        //appFrame.pack();
+        //appFrame.setVisible(true);
         /* inputDataSet() */
     }
 
@@ -108,19 +124,15 @@ public class Main extends JApplet implements Runnable {
         final float[] x = input.getDataX();
         final float[] y = input.getDataY();
 
-        progress = new GenetixProgress(genetix.getGenerationLimit());
+        GenetixProgress progress = new GenetixProgress(genetix.getGenerationLimit());
         progress.setOpaque(true);
-        
-        dialog.setContentPane(progress);
-        Point p = gui.getLocationOnScreen();
-        Dimension d1 = gui.getSize();
-        dialog.setSize(300, 400);
-        Dimension d2 = dialog.getSize();
-        int xloc = p.x + (d1.width - d2.width) / 2;
-        int yloc = p.y + (d1.height - d2.height) / 2;
-        dialog.setLocation(xloc,yloc);
-        dialog.pack();
-        dialog.setVisible(true);
+
+        progressDialog = new JDialog(appFrame, "Please Wait ...");
+        progressDialog.setContentPane(progress);
+        progressDialog.setSize(300, 400);
+        progressDialog.pack();
+        setDialogCenterLocation(progressDialog);
+        progressDialog.setVisible(true);
 
         genetix.setApproximatingData(x, y);
 
@@ -140,11 +152,20 @@ public class Main extends JApplet implements Runnable {
         /*showResults()*/
     }
 
+    private static void setDialogCenterLocation(final JDialog dialog) {
+        final JFrame owner = (JFrame) dialog.getOwner();
+        final Point screen = owner.getLocationOnScreen();
+        Dimension ownerSize = owner.getSize();
+        Dimension dialogSize = dialog.getSize();
+        int xloc = screen.x + (ownerSize.width - dialogSize.width) / 2;
+        int yloc = screen.y + (ownerSize.height - dialogSize.height) / 2;
+        dialog.setLocation(xloc, yloc);
+    }
+
     private void showResults() {
-        dialog.setVisible(false);
-        //dialog.dispose();
-        dialog = null;
-        progress = null;
+        progressDialog.setVisible(false);
+        progressDialog.dispose();
+        //progressDialog = null;
 
         final int size = genetix.getGenerationSize() / 2;
         String[] funcs = genetix.getBestFunctionsFormatted(size);
@@ -152,16 +173,23 @@ public class Main extends JApplet implements Runnable {
         output.addDrawGraph(graph);
         output.setAxisLimits(input.getAxisLimits());
 
-        gui.getContentPane().remove(input);
-        gui.getContentPane().add(output);
-        gui.pack();
-        gui.setVisible(true);
+        appFrame.getContentPane().remove(input);
+        appFrame.getContentPane().add(output);
+        appFrame.pack();
+        appFrame.setVisible(true);
         output.repaint();
     }
 
     public void run() {
-        set.pack();
-        set.setVisible(true);
+        appFrame.pack();
+        appFrame.setVisible(true);
+        
+        settingsDialog.pack();
+        setDialogCenterLocation(settingsDialog);
+        settingsDialog.setVisible(true);
+
+        //set.pack();
+        //set.setVisible(true);
         /*settingsReady()*/
     }
     
@@ -169,7 +197,6 @@ public class Main extends JApplet implements Runnable {
         Main main = new Main();
         main.init();
         main.enableSaving();
-        main.enableClose();
         main.start();
     }    
 

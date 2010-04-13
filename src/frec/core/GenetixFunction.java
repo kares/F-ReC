@@ -22,7 +22,8 @@ public class GenetixFunction implements Comparable, Cloneable {
             Functions.Sub.INSTANCE,
             Functions.Mul.INSTANCE,
             Functions.Div.INSTANCE,
-            Functions.Mod.INSTANCE,
+            // NOTE: mod is not supported by JCM !
+            //Functions.Mod.INSTANCE,
             Functions.Pow.INSTANCE,
             Functions.Sin.INSTANCE,
             Functions.Cos.INSTANCE,
@@ -345,6 +346,7 @@ public class GenetixFunction implements Comparable, Cloneable {
 
     }
 
+    /*
     public static void main(String[] args) {
         FunctionTree g = FunctionTree.getRandomInstance(5);
         System.out.println(g);
@@ -356,5 +358,6 @@ public class GenetixFunction implements Comparable, Cloneable {
         System.out.println("min=" + LimitedTree.getCodeElementMin());
         System.out.println("max=" + LimitedTree.getCodeElementMax());
     }
+    */
 
 }
