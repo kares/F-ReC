@@ -1,550 +1,418 @@
 package frec.core;
 
-import frec.util.Generator;
+import frec.util.RandomHelper;
+import java.util.ArrayList;
+import java.util.Random;
 
 /**
- * Class <code> ReadsTree </code> is an object representation of trees (with a
- * root). This class provides all the operations (methods) necessary for the
- * basics of genetic programming. The primary thing that characterizes this
- * object is Read's linear code, this code is used for effectively coding graphs
- * (trees) to a sequence of numbers (or strings).
+ * <code>ReadsTree</code> is an object representation of single rooted trees.
+ * This class provides the operations necessary for the "genetic" operations
+ * on such trees.
+ * The primary thing that characterizes instances of this class is Read's
+ * linear code aka a code used for effectively code (tree) graphs as a sequence
+ * of numbers.
+ *
+ * NOTE: Instances of this class are mutable and are not thread-safe !
+ *
+ * @see TreeGraph#forReadsCode(java.lang.String) 
  */
+public class ReadsTree implements java.io.Serializable, Cloneable {
 
-public class ReadsTree {
+    private static int maxRandomCodeLength = 10;
 
-    /** Read's linear code as a string for this tree. */
-    protected String code;
-
-    /** Read's linear code as an array of bytes for this tree. */
-    private byte[] code_no;
-
-    /** Vertex set of a tree. (if we thing about tree as a graph). */
-    private byte[] V;
-
-    /** Edge set of a tree. (if we thing about tree as a graph). */
-    private byte[][] E;
+    /** Read's linear code as a string. */
+    private String code;
 
     /**
-     * Parameter, that marks the (begining) position were the tree was last time
-     * crossed.
-     */
-    protected byte crossPosBeg;
-
-    /**
-     * Parameter, that marks the (end) position were the tree was last time
-     * crossed.
-     */
-    protected byte crossPosEnd;
-
-    private boolean useCrossPos = false;
-
-    private static int dfMaxCodeLength = 10;
-
-    /**
-     * Alocates a new <code>ReadsTree</code> , this code is generated randomly
-     * its length will be a (random) natural number from [2,10]
-     */
-
-    private ReadsTree() {
-        // this(2 + Generator.randomInt(9));
-    }
-
-    /**
-     * Alocates a new <code>ReadsTree</code> , this code is set from the value
-     * provided.
+     * Creates a new tree with the given code.
+     *
+     * NOTE: The passed string is not validated !
      * 
      * @param code
-     *            The new code of this tree.
      */
-
-    public ReadsTree(String code) {
+    public ReadsTree(final String code) {
         this.code = code;
-        setCodeNo();
+    }
+    
+    public static int getMaxRandomCodeLength() {
+        return maxRandomCodeLength;
     }
 
-    /**
-     * Alocates a new <code>ReadsTree</code> , the code will be set from the
-     * graph representation: <code>(V,E)</code> , it is assumed that the
-     * vertices are numbered starting 1, where 1 is the root vertex an the whole
-     * set is arranged.
-     * 
-     * @param V
-     *            The vertex set of the tree.
-     * @param E
-     *            The edge set of the tree.
-     */
-
-    // public ReadsTree(byte[] V, byte[][] E) {
-    // this.V = V; this.E = E;
-    // setCode();
-    // setCodeNo();
-    // }
-    
-    /**
-     * Alocates a new <code>ReadsTree</code> , this code is generated randomly
-     * its length will be the parameter of the method.
-     * 
-     * @param code_len
-     *            The new length of this code.
-     */
-
-    // public ReadsTree(int code_len) {
-    // this.code = generateRandomCode(code_len);
-    // setCodeNo();
-    // }
-    
-    public static void setDefaultMaxCodeLength(int length) {
-        if (length < 2) return; // / ???
-        dfMaxCodeLength = length;
+    public static void setMaxRandomCodeLength(int length) {
+        if (length < 2) {
+            throw new IllegalArgumentException("length should be >= 2 got: " + length);
+        }
+        maxRandomCodeLength = length;
     }
 
     public static ReadsTree getRandomInstance() {
-        return getRandomInstance(dfMaxCodeLength);
+        return getRandomInstance(randomCodeLength());
     }
 
-    public static ReadsTree getRandomInstance(int code_len) {
-        ReadsTree instance = new ReadsTree();
-        instance.code = generateRandomCode(code_len);
-        instance.setCodeNo();
-        return instance;
+    public static ReadsTree getRandomInstance(int length) {
+        return new ReadsTree(generateRandomCode(length));
     }
 
     /**
-     * Returns the code representation of this tree as an array (<code>code_no</code>).
-     * 
-     * @return Parameter <code>code_no</code> fot this object.
+     * Generate a random int - a valid read's code length.
+     * @see ReadsTree#getMaxRandomCodeLength()
+     * @return random code length
      */
-
-    protected byte[] getCodeNo() {
-        return code_no;
+    protected static int randomCodeLength() {
+        return 2 + RandomHelper.randomInt(maxRandomCodeLength - 2 + 1);
     }
 
     /**
-     * Returns the vertex set of this tree (<code>V</code>).
-     * <p>
-     * Before calling this method the method <code>setGraph()</code> should be
-     * called to make sure the graph representation is set.
-     * 
-     * @return Parameter <code>V</code> for this object, null if the graph has
-     *         been not set.
+     * Method generates a random code of the given length.
+     *
+     * @param len The length of the randomly generated tree code.
+     * @return String representing a random tree code.
      */
-
-    // public byte[] getGraphVertices() {
-    // return V;
-    // }
-    /**
-     * Returns the edge set of this tree (<code>E</code>).
-     * <p>
-     * Before calling this method the method <code>setGraph()</code> should be
-     * called to make sure the graph representation is set.
-     * 
-     * @return Parameter <code>E</code> for this object, null if the graph has
-     *         been not set.
-     */
-
-    // public byte[][] getGraphEdges() {
-    // return E;
-    // }
-    /**
-     * Sets the graph representation of this tree (<code>V</code> and
-     * <code>E</code>) using the code representation (<code>code</code>).
-     */
-    /*
-     * public void setGraph() { int len = code.length(); int[][] E_tmp = new
-     * int[len-1][2]; int[] V_tmp = new int[len]; V_tmp[0] = 1; int d = 0, l =
-     * 1; int branch[] = new int[len]; int index[] = new int[len]; branch[0] =
-     * code_no[0]; index[0] = 1; while (d>=0) if (branch[d]>0) { branch[d]--;
-     * d++; l++; branch[d] = code_no[l-1]; index[d] = l; V_tmp[l-1] = index[d];
-     * E_tmp[l-2][0] = index[d-1]; E_tmp[l-2][1] = index[d]; } else d--; V = new
-     * byte[l]; E = new byte[l-1][2]; for (int i=0; i<l-1; i++) { V[i] =
-     * (byte)V_tmp[i]; E[i][0] = (byte)E_tmp[i][0]; E[i][1] = (byte)E_tmp[i][1]; }
-     * V[l-1] = (byte)V_tmp[l-1]; }
-     */
-    /*
-     * private void setCode() { int poc = V.length; int[] deg = new int[poc];
-     * deg[0] = 0; //V[0] = 1 = root for (int i=1; i<poc; i++) deg[i] = -1; for
-     * (int i=0; i<poc-1; i++) { deg[E[i][0] - 1]++; deg[E[i][1] - 1]++; } code =
-     * setString(0, deg); } private String setString(int v_index, int[] deg) {
-     * int counter = deg[v_index]; String res = String.valueOf(counter); if
-     * (counter > 0) { int i = 0; while (counter > 0) { if ((E[i][0] ==
-     * V[v_index]) && (E[i][1] > E[i][0])) { counter--; int index = E[i][1] - 1;
-     * res += setString(index, deg); } if ((E[i][1] == V[v_index]) && (E[i][0] >
-     * E[i][1])) { counter--; int index = E[i][0] - 1; res += setString(index,
-     * deg); } i++; } } return res; }
-     */
-
-    /**
-     * This method is used to set the parameter <code>code_no</code> using the
-     * <code>code<code> (so it won't be necessary to parse the string
-     * all the times when it is used).
-     */
-
-    protected void setCodeNo() {
-        code_no = new byte[code.length()];
-        for (int i = 0; i < code.length(); i++)
-            code_no[i] = Byte.parseByte(code.substring(i, i + 1));
-    }
-
-    /**
-     * Method used to provide a <code>String</code> representation of an
-     * object.
-     * 
-     * @return String representing this tree.
-     */
-
-    public String toString() {
-        String s = "Tree: code = " + code + " ;";
-        return s;
-    }
-
-    /**
-     * Method provides a random <code>ReadsTree</code> generation of the
-     * specified length.
-     * <p>
-     * This is mainly used by constructors.
-     * 
-     * @param len
-     *            The length of the randomly generated tree code.
-     * @return String representing the code.
-     */
-
-    protected static String generateRandomCode(int len) {
+    public static String generateRandomCode(int len) {
         if (len == 1) return "0";
         if (len == 2) return "10";
         int[] d = new int[len - 1];
         d[0] = len - 1;
-        int rnd = 1 + Generator.randomInt(d[0]);
+
+        Random random = RandomHelper.newRandom();
+        StringBuffer res = new StringBuffer(len);
+        
+        int rnd = 1 + random.nextInt(d[0]);
         if (rnd > 9) rnd = 9;
-        String res = new String(String.valueOf(rnd));
+        res.append(rnd);
 
         for (int i = 1; i < len - 1; i++) {
             d[i] = d[i - 1] - rnd;
             if (d[i] == len - i - 1)
-                rnd = 1 + Generator.randomInt(d[i]);
+                rnd = 1 + random.nextInt(d[i]);
             else
-                rnd = Generator.randomInt(d[i] + 1);
-            if (rnd > 9) rnd = 5 + Generator.randomInt(5);
-            res += new String(String.valueOf(rnd));
+                rnd = random.nextInt(d[i] + 1);
+            if (rnd > 9) rnd = 5 + random.nextInt(5);
+            res.append(rnd);
         }
 
-        res += new String("0");
-        return res;
+        return res.append("0").toString();
     }
 
     /**
-     * Method provides a random <code>ReadsTree</code> generation of the
-     * specified length.
-     * <p>
-     * This is mainly used by constructors.
-     * 
-     * @param min_len
-     *            The minimal length of the randomly generated tree code.
-     * @param max_len
-     *            The maximal length of the randomly generated tree code.
-     * @return String representing the code.
+     * Method generates a random code of the given length.
+     *
+     * @param min_len The minimal length of the randomly generated code.
+     * @param max_len The maximal length of the randomly generated code.
+     * @return String representing a random tree code.
      */
-
-    protected static String generateRandomCode(int min_len, int max_len) {
-        int len = min_len + Generator.randomInt(max_len - min_len + 1);
-        return generateRandomCode(len);
+    public static String generateRandomCode(int min_len, int max_len) {
+        int len = min_len + RandomHelper.randomInt(max_len - min_len + 1);
+        return ReadsTree.generateRandomCode(len);
     }
 
-    /**
-     * This method is used to find a length of a subtree (subcode) of this tree.
-     * 
-     * @param pos
-     *            The (code) position of the subtree.
-     * @return Length of a subtree of this tree.
-     */
+    private transient byte[] codeDigits;
 
-    protected int subcodeLength(int pos) {
-        if (code_no[pos] == 0)
-            return 1;
-        else {
-            int len = 1;
-            while (true) {
-                len++;
-                int sum = 0;
-                for (int i = pos; i < pos + len; i++) {
-                    sum += code_no[i];
-                    if (sum < i - pos) {
-                        sum = 0;
-                        break;
-                    }
-                }
-                if (sum != len - 1)
-                    continue;
-                else
-                    return len;
+    /**
+     * Returns the code representation of this tree as decimnal digits.
+     * 
+     * NOTE: The array shouldn't be modified !
+     *
+     * @return code as decimal digits.
+     */
+    public byte[] getCodeDigits() {
+        if (codeDigits == null) {
+            final byte[] digits = new byte[code.length()];
+            for (int i = 0; i < code.length(); i++) {
+                digits[i] = (byte) Character.digit(code.charAt(i), 10);
             }
+            this.codeDigits = digits;
         }
+        return codeDigits;
     }
 
     /**
-     * This method is used to find a subtree (subcode) of this tree.
-     * 
-     * @param pos
-     *            The (code) position of the subtree.
-     * @return Subtree of this tree.
+     * Returns the <code>code</code> of this tree.
+     *
+     * @return String Read's code of the tree.
      */
-
-    protected ReadsTree subCode(int pos) {
-        int len = subcodeLength(pos);
-        String subCode = code.substring(pos, pos + len);
-        return new ReadsTree(subCode);
-    }
-
-    /**
-     * This method simply returns the <code>code</code> parameter of this
-     * tree.
-     * 
-     * @return String - the code of the tree.
-     */
-
     public String getCode() {
         return this.code;
     }
 
+    public String format() {
+        return this.code;
+    }
+
+    /**
+     * Set the code for this tree.
+     * @param code the new code value
+     */
+    protected void setCode(final CharSequence code) {
+        this.code = code.toString();
+        this.codeDigits = null;
+        //this.subcodeLength = null;
+    }
+
+    public int length() {
+        return this.code.length();
+    }
+
+    //private transient int[] subcodeLength;
+
+    /**
+     * Returns the length of a subtree (subcode) of this tree.
+     * 
+     * @param pos The code position of the subtree.
+     * @return The length of a subtree at the given position.
+     */
+    public int subcodeLength(int pos) {
+        if (pos < 0) {
+            throw new IndexOutOfBoundsException("pos < 0 : " + pos);
+        }
+        if (pos >= length()) {
+            throw new IndexOutOfBoundsException("pos >= length : " + pos);
+        }
+        //if (subcodeLength == null) {
+        //    subcodeLength = new int[code.length()];
+        //}
+        //int len = subcodeLength[pos];
+        //if (len > 0) return len;
+        int len = 1;
+        final byte[] codeDigits = getCodeDigits();
+        if (codeDigits[pos] == 0) return 1;
+        while (true) {
+            len++;
+            int sum = 0;
+            for (int i = pos; i < pos + len; i++) {
+                sum += codeDigits[i];
+                if (sum < i - pos) {
+                    sum = 0;
+                    break;
+                }
+            }
+            if (sum == len - 1) return len;
+        }
+    }
+
+    /**
+     * Finds and returns a subcode of this tree.
+     * 
+     * @param pos The code position of the subtree.
+     * @return Subcode of this tree.
+     */
+    public String subcode(int pos) {
+        final int len = subcodeLength(pos);
+        return getCode().substring(pos, pos + len);
+    }
+
+    /**
+     * @param pos The code position of the subtree.
+     * @return Sub-tree of this tree.
+     *
+     * @see #subcode(int)
+     */
+    public ReadsTree subTree(int pos) {
+        return new ReadsTree(subcode(pos));
+    }
+
     /**
      * This method causes that this tree (code) will be randomly mutated at a
-     * random position which is distinct from the root position (first position
-     * in the code). The whole subtree at the specified position will be
+     * random position, the whole subtree at the specified position will be
      * replaced with a new one.
-     * 
-     * @param mut_len
-     *            Length of the new subtree of this tree.
+     *
+     * NOTE: The mutation modifies this tree object !
+     *
+     * @param mut_len Length of the added (mutation) subtree.
      * @return The random position where the mutation occured.
      */
-
     public int mutateCode(int mut_len) {
-        int len = code.length();
-        int pos = 1 + Generator.randomInt(len - 1);
-        int pos_len = subcodeLength(pos);
-        String res = code.substring(0, pos);
-        res += generateRandomCode(mut_len);
-        res += code.substring(pos + pos_len, len);
-        code = res;
-        setCodeNo();
+        final int pos = 1 + RandomHelper.randomInt(length() - 1);
+        mutateCode(new MutationContext(this, pos, mut_len));
         return pos;
     }
 
     /**
      * This method causes that this tree (code) will be randomly mutated at a
-     * random position which is distinct from the root position (first position
-     * in the code). The whole subtree at the specified position will be
-     * replaced with a new one, but the length is limited by the parameters of
-     * this method.
-     * 
-     * @param min_len
-     *            Minimal accepted length of the result tree.
-     * @param max_len
-     *            Maximal accepted length of the result tree.
+     * random position, the whole subtree at the specified position will be
+     * replaced with a new one.
+     *
+     * NOTE: The mutation modifies this tree object !
+     *
+     * @param min_len The minimal length of the resulting tree.
+     * @param max_len The maximal length of the resulting tree.
      * @return The random position where the mutation occured.
      */
-
     public int mutateCode(int min_len, int max_len) {
-        int len = code.length();
-        int pos = 1 + Generator.randomInt(len - 1);
-        int pos_len = subcodeLength(pos);
-        int mut_len = Generator.randomInt(max_len);
-        int tmp = len + mut_len - pos_len;
-        while ((tmp > max_len) || (tmp < min_len)) {
-            mut_len = Generator.randomInt(max_len);
-            tmp = len + mut_len - pos_len;
-        }
-        String res = code.substring(0, pos);
-        res += generateRandomCode(mut_len);
-        res += code.substring(pos + pos_len, len);
-        code = res;
-        setCodeNo();
+        final int pos = 1 + RandomHelper.randomInt(length() - 1);
+        int mut_len = randomMutationLength(pos, min_len, max_len);
+        mutateCode(new MutationContext(this, pos, mut_len));
         return pos;
     }
 
-    /**
-     * @param
-     */
+    public void mutateCode(final MutationContext context) {
+        final int pos = context.getIndex();
+        final int len = context.getLength();
+        //System.out.println("mutateCode pos = "+ pos +" len = " + len);
+        setCode(generateMutatedCode(pos, len));
+    }
 
-    public void setCrossPosition(int pos) {
-        int len = this.code.length();
-        if (pos < 0 && pos >= len)
-            throw new IllegalArgumentException(
-                    "position must satisfy: pos >= 0 & pos < code_length");
-        else {
-            crossPosBeg = (byte) pos;
-            crossPosEnd = (byte) subcodeLength(pos);
-            crossPosEnd += crossPosBeg;
-            useCrossPos = true;
+    protected String generateMutatedCode(int pos, int mut_len) {
+        final int pos_len = subcodeLength(pos);
+        return code.substring(0, pos) +
+               ReadsTree.generateRandomCode(mut_len) +
+               code.substring(pos + pos_len, code.length());
+    }
+
+    protected int randomMutationLength(int pos, int min_len, int max_len) {
+        final int len = length();
+        final int pos_len = subcodeLength(pos);
+        //System.out.println("randomMutationLength pos = "+ pos +" len = "+ len +" pos_len = " + pos_len +
+        //                   " min_len = "+ min_len +" max_len = " + max_len);
+        int mut_min_len = min_len - (len - pos_len); // <= mut_len
+        if ( mut_min_len < 1 ) mut_min_len = 1;
+        int mut_max_len = max_len - (len - pos_len); // >= mut_len
+        if ( mut_max_len <= 0 ) { //return -1;
+            throw new IllegalStateException("could not decide mutation length");
         }
+        return mut_min_len + RandomHelper.randomInt(mut_max_len);
     }
 
     /**
-     * Method that crosses two <code>ReadsTree</code> objects. This method
-     * causes that a random position is selected in both trees and then the
-     * subtrees are changed among these trees.
-     * 
-     * @param tree
-     *            <code>ReadsTree</code> object to be crossed with this tree.
-     * @return The new (2) trees created.
+     * Mark the begining and end positions of the last crossing.
+     */
+    //private int crossPosBeg = 0, crossPosEnd = 0;
+    /*
+    protected int getCrossPosBeg() {
+        if ( isCrossed() ) return crossPosBeg;
+        throw new IllegalStateException("cross position not set");
+    }
+
+    protected int getCrossPosEnd() {
+        if ( isCrossed() ) return crossPosEnd;
+        throw new IllegalStateException("cross position not set");
+    }
+    */
+
+    /*
+    protected boolean isCrossed() {
+        return crossPosEnd > 0;
+    }
+    */
+
+    /**
+     * Sets the cross position (after crossing) for this tree.
+     * @param pos
      */
     /*
-     * public ReadsTree[] crossCode(ReadsTree tree) { int len1 =
-     * this.code.length(); int len2 = tree.code.length(); int pos1, pos2,
-     * pos1_len, pos2_len; if (len1==1) { if (len2==1) { this.crossPosBeg =
-     * (byte)0; this.crossPosEnd = (byte)1; tree.crossPosBeg = (byte)0;
-     * tree.crossPosEnd = (byte)1; return new ReadsTree[] {this, tree}; } pos1 =
-     * 0; pos1_len = 1; } else pos1 = 1 + Generator.randomInt(len1 - 1); if
-     * (len2==1) { pos2 = 0; pos2_len = 1; } else pos2 = 1 +
-     * Generator.randomInt(len2 - 1); pos1_len = this.subcodeLength(pos1);
-     * pos2_len = tree.subcodeLength(pos2); this.crossPosBeg = (byte)pos1;
-     * this.crossPosEnd = (byte)(pos1_len + pos1); tree.crossPosBeg =
-     * (byte)pos2; tree.crossPosEnd = (byte)(pos2_len + pos2); String res1 =
-     * this.code.substring(0, pos1); res1 += tree.code.substring(pos2, pos2 +
-     * pos2_len); res1 += this.code.substring(pos1 + pos1_len, len1); String
-     * res2 = tree.code.substring(0, pos2); res2 += this.code.substring(pos1,
-     * pos1 + pos1_len); res2 += tree.code.substring(pos2 + pos2_len, len2);
-     * ReadsTree[] result = new ReadsTree[2]; result[0] = new ReadsTree(res1);
-     * result[1] = new ReadsTree(res2); return result; }
+    protected void setCrossPosition(int pos) {
+        final int len = this.code.length();
+        if (pos < 0 && pos >= len)
+            throw new IllegalArgumentException(
+                    "position must satisfy: pos >= 0 and pos < length");
+        crossPosBeg = pos;
+        crossPosEnd = subcodeLength(pos);
+        crossPosEnd += crossPosBeg;
+    }
+
+    private void setCrossPosition(int beg, int end) {
+        final int len = this.code.length();
+        if (beg <= 0 || beg >= len)
+            throw new IllegalArgumentException(
+                    "position beg not in (0, length) " + beg);
+        if (beg <= beg || beg >= len)
+            throw new IllegalArgumentException(
+                    "position end not in (beg, length) " + end);
+        crossPosBeg = beg;
+        crossPosEnd = end;
+    }
+    */
+
+    /**
+     * Crosses two <code>ReadsTree</code> objects.
+     * A random position is selected in both trees and then the
+     * subtrees are exchanged among the 2 trees.
+     *
+     * NOTE: the original trees are not changed !
+     *
+     * @param that The tree to be crossed with this.
+     * @return The new (2) trees created.
      */
-
-    public ReadsTree[] crossCode(ReadsTree tree) {
-        int len1 = this.code.length();
-        int len2 = tree.code.length();
+    public ReadsTree[] crossCode(final ReadsTree that) {
+        /*
+        final int len1 = this.length();
+        final int len2 = that.length();
         int pos1 = 0, pos2 = 0, pos1_len = 1, pos2_len = 1;
-
-        if (this.useCrossPos && tree.useCrossPos) {
-            pos1 = this.crossPosBeg;
-            pos1_len = this.crossPosEnd - pos1;
-            pos2 = tree.crossPosBeg;
-            pos2_len = tree.crossPosEnd - pos2;
+        
+        if (len1 == 1 && len2 == 1) {
+            this.setCrossPosition(0, 1);
+            that.setCrossPosition(0, 1);
+            return new ReadsTree[] { this, that };
         }
-        else // !useCrossPos for both
-        {
-            if (len1 == 1 && len2 == 1) {
-                this.crossPosBeg = (byte) 0;
-                this.crossPosEnd = (byte) 1;
-                tree.crossPosBeg = (byte) 0;
-                tree.crossPosEnd = (byte) 1;
-                return new ReadsTree[] { this, tree };
-            }
-            else
-                if (!this.useCrossPos && !tree.useCrossPos) {
-                    if (len1 != 1) pos1 = 1 + Generator.randomInt(len1 - 1);
-                    if (len2 != 1) pos2 = 1 + Generator.randomInt(len2 - 1);
-                    pos1_len = this.subcodeLength(pos1);
-                    pos2_len = tree.subcodeLength(pos2);
-                    this.crossPosBeg = (byte) pos1;
-                    this.crossPosEnd = (byte) (pos1_len + pos1);
-                    tree.crossPosBeg = (byte) pos2;
-                    tree.crossPosEnd = (byte) (pos2_len + pos2);
-                }
-                else
-                    if (this.useCrossPos) {
-                        pos1 = this.crossPosBeg;
-                        pos1_len = this.crossPosEnd - pos1;
-                        if (len2 != 1)
-                            pos2 = 1 + Generator.randomInt(len2 - 1);
-                        pos2_len = tree.subcodeLength(pos2);
-                        tree.crossPosBeg = (byte) pos2;
-                        tree.crossPosEnd = (byte) (pos2_len + pos2);
-                    }
-                    else
-                        if (tree.useCrossPos) {
-                            pos2 = tree.crossPosBeg;
-                            pos2_len = tree.crossPosEnd - pos2;
-                            if (len1 != 1)
-                                pos1 = 1 + Generator.randomInt(len1 - 1);
-                            pos1_len = this.subcodeLength(pos1);
-                            this.crossPosBeg = (byte) pos1;
-                            this.crossPosEnd = (byte) (pos1_len + pos1);
-                        }
 
-        }// !useCrossPos for both
+        if (len1 != 1) pos1 = 1 + RandomHelper.randomInt(len1 - 1);
+        if (len2 != 1) pos2 = 1 + RandomHelper.randomInt(len2 - 1);
+        pos1_len = this.subcodeLength(pos1);
+        pos2_len = that.subcodeLength(pos2);
+        this.setCrossPosition(pos1, pos1 + pos1_len);
+        that.setCrossPosition(pos2, pos2 + pos2_len);
 
-        String res1 = this.code.substring(0, pos1);
-        res1 += tree.code.substring(pos2, pos2 + pos2_len);
-        res1 += this.code.substring(pos1 + pos1_len, len1);
-        String res2 = tree.code.substring(0, pos2);
-        res2 += this.code.substring(pos1, pos1 + pos1_len);
-        res2 += tree.code.substring(pos2 + pos2_len, len2);
+        String res1 = this.code.substring(0, pos1) +
+                      that.code.substring(pos2, pos2 + pos2_len) +
+                      this.code.substring(pos1 + pos1_len, len1);
+        String res2 = that.code.substring(0, pos2) +
+                      this.code.substring(pos1, pos1 + pos1_len) +
+                      that.code.substring(pos2 + pos2_len, len2);
 
-        ReadsTree[] result = new ReadsTree[2];
-        result[0] = new ReadsTree(res1);
-        result[1] = new ReadsTree(res2);
-
-        return result;
+        return new ReadsTree[] { new ReadsTree(res1), new ReadsTree(res2) };
+        */
+        return crossCode(that, 0, Integer.MAX_VALUE);
     }
 
     /**
      * Method that crosses two <code>ReadsTree</code> objects. This method
      * causes that a random position is selected in both trees and then the
-     * subtrees are changed among these trees. Limits for the new tree codes are
+     * subtrees are changed among these trees. Limits for the new that codes are
      * provided by the parameters of the method.
      * 
-     * @param tree
-     *            <code>ReadsTree</code> object to be crossed with this tree.
-     * @param min_len
-     *            Minimal length of the newly created trees.
-     * @param max_len
-     *            Maximal length of the newly created trees.
+     * @param that <code>ReadsTree</code> object to be crossed with this.
+     * @param min_len Minimal length of the newly created trees.
+     * @param max_len Maximal length of the newly created trees.
      * @return The new (2) trees created.
      */
-
-    public ReadsTree[] crossCode(ReadsTree tree, int min_len, int max_len) {
-        int len1 = this.code.length();
-        int len2 = tree.code.length();
-        int pos1 = 0, pos2 = 0, pos1_len = 1, pos2_len = 1;
-
-        if (this.useCrossPos && tree.useCrossPos)
+    public ReadsTree[] crossCode(ReadsTree that, int min_len, int max_len) {
+        /*
+        if (this.isCrossed() && that.isCrossed()) {
         // either we are using cross positons that
         // has been set before, they may change if they
         // do not satisfy the conditions about min_len &
-        // max_len, they won't change (even if they do not
+        // max_len or they won't change (even if they do not
         // satisfy these conditions) if we can not find
-        // positions that will satisfy them (100 triings)
-        {
+        // positions that will satisfy them (see bellow)
             pos1 = this.crossPosBeg;
             pos1_len = this.crossPosEnd - pos1;
-            pos2 = tree.crossPosBeg;
-            pos2_len = tree.crossPosEnd - pos2;
+            pos2 = that.crossPosBeg;
+            pos2_len = that.crossPosEnd - pos2;
         }
-        else // !useCrossPos for both
-        {
-            if (len1 == 1 && len2 == 1) {
-                this.crossPosBeg = (byte) 0;
-                this.crossPosEnd = (byte) 1;
-                tree.crossPosBeg = (byte) 0;
-                tree.crossPosEnd = (byte) 1;
-                return new ReadsTree[] { this, tree };
+        else { // !crossed for both
+            if (!this.isCrossed() && !that.isCrossed()) {
+                if (len1 != 1) pos1 = 1 + RandomHelper.randomInt(len1 - 1);
+                if (len2 != 1) pos2 = 1 + RandomHelper.randomInt(len2 - 1);
+                pos1_len = this.subcodeLength(pos1);
+                pos2_len = that.subcodeLength(pos2);
             }
-            else
-                if (!this.useCrossPos && !tree.useCrossPos) {
-                    if (len1 != 1) pos1 = 1 + Generator.randomInt(len1 - 1);
-                    if (len2 != 1) pos2 = 1 + Generator.randomInt(len2 - 1);
-                    pos1_len = this.subcodeLength(pos1);
-                    pos2_len = tree.subcodeLength(pos2);
-
+            else {
+                if (this.isCrossed()) {
+                    pos1 = this.crossPosBeg;
+                    pos1_len = this.crossPosEnd - pos1;
+                    if (len2 != 1) pos2 = 1 + RandomHelper.randomInt(len2 - 1);
+                    pos2_len = that.subcodeLength(pos2);
                 }
-                else
-                    if (this.useCrossPos) {
-                        pos1 = this.crossPosBeg;
-                        pos1_len = this.crossPosEnd - pos1;
-                        if (len2 != 1)
-                            pos2 = 1 + Generator.randomInt(len2 - 1);
-                        pos2_len = tree.subcodeLength(pos2);
-                    }
-                    else
-                        if (tree.useCrossPos) {
-                            pos2 = tree.crossPosBeg;
-                            pos2_len = tree.crossPosEnd - pos2;
-                            if (len1 != 1)
-                                pos1 = 1 + Generator.randomInt(len1 - 1);
-                            pos1_len = this.subcodeLength(pos1);
-                        }
-
-        }// !useCrossPos for both
+                if (that.isCrossed()) {
+                    pos2 = that.crossPosBeg;
+                    pos2_len = that.crossPosEnd - pos2;
+                    if (len1 != 1) pos1 = 1 + RandomHelper.randomInt(len1 - 1);
+                    pos1_len = this.subcodeLength(pos1);
+                }
+            }
+        }// !crossed for both
 
         int counter = 0;
-
         while ((len1 - pos1_len + pos2_len < min_len)
                 || (len1 - pos1_len + pos2_len > max_len)
                 || (len2 - pos2_len + pos1_len < min_len)
@@ -552,57 +420,311 @@ public class ReadsTree {
             // trying to find positions that match the
             // limits (min_len & max_len):
             if (++counter == 100) break;
-            if (!this.useCrossPos) {
-                pos1 = 1 + Generator.randomInt(len1 - 1);
+            if (!this.isCrossed()) {
+                pos1 = 1 + RandomHelper.randomInt(len1 - 1);
                 pos1_len = this.subcodeLength(pos1);
             }
-            else
-                if (counter > 50) {
-                    pos1 = 1 + Generator.randomInt(len1 - 1);
-                    pos1_len = this.subcodeLength(pos1);
-                }
-            if (!tree.useCrossPos) {
-                pos2 = 1 + Generator.randomInt(len2 - 1);
-                pos2_len = tree.subcodeLength(pos2);
+            else if (counter > 50) {
+                pos1 = 1 + RandomHelper.randomInt(len1 - 1);
+                pos1_len = this.subcodeLength(pos1);
             }
-            else
-                if (counter > 50) {
-                    pos2 = 1 + Generator.randomInt(len2 - 1);
-                    pos2_len = tree.subcodeLength(pos2);
-                }
+            if (!that.isCrossed()) {
+                pos2 = 1 + RandomHelper.randomInt(len2 - 1);
+                pos2_len = that.subcodeLength(pos2);
+            }
+            else if (counter > 50) {
+                pos2 = 1 + RandomHelper.randomInt(len2 - 1);
+                pos2_len = that.subcodeLength(pos2);
+            }
         }
 
-        if (counter == 100 && this.useCrossPos && tree.useCrossPos)
+        if (counter == 100 && this.isCrossed() && that.isCrossed()) {
         // in case we are using a cross position which is bad
         // (not satisfiing the conditions about min_len & max_len)
         // but we can not satisfy the conditions after 100 iterations
         // we will still use the "bad" cross positions set before
-        {
             pos1 = this.crossPosBeg;
             pos1_len = this.crossPosEnd - pos1;
-            pos2 = tree.crossPosBeg;
-            pos2_len = tree.crossPosEnd - pos2;
+            pos2 = that.crossPosBeg;
+            pos2_len = that.crossPosEnd - pos2;
         }
         else {
-            this.crossPosBeg = (byte) pos1;
-            this.crossPosEnd = (byte) (pos1_len + pos1);
-            tree.crossPosBeg = (byte) pos2;
-            tree.crossPosEnd = (byte) (pos2_len + pos2);
+            this.setCrossPosition(pos1, pos1 + pos1_len);
+            that.setCrossPosition(pos2, pos2 + pos2_len);
+        }
+        */
+        CrossingContext context = randomCrossingContext(that, min_len, max_len);
+        crossCode( context );
+        return new ReadsTree[] { context.getChild1(), context.getChild2() };
+    }
+
+    public void crossCode(final CrossingContext context) {
+        final ReadsTree tree1 = context.parent1; // this
+        final ReadsTree tree2 = context.parent2; // that
+        int beg1 = context.startIndex1, end1 = context.endIndex1;
+        int beg2 = context.startIndex2, end2 = context.endIndex2;
+
+        /*
+        final int len1 = this.length();
+        final int len2 = that.length();
+        if (len1 == 1 && len2 == 1) {
+            this.setCrossPosition(0, 1);
+            that.setCrossPosition(0, 1);
+            return new ReadsTree[] { this, that };
+        }
+        */
+        // code exchange:
+        String res1 = tree1.code.substring(0, beg1) +
+                      tree2.code.substring(beg2, end2) +
+                      tree1.code.substring(end1, tree1.length());
+        String res2 = tree2.code.substring(0, beg2) +
+                      tree1.code.substring(beg1, end1) +
+                      tree2.code.substring(end2, tree2.length());
+
+        context.setChild1(new ReadsTree(res1));
+        context.setChild2(new ReadsTree(res2));
+    }
+
+    /**
+     * Selects a random cross position for this and the passed tree.
+     * The selected position satisfies the given constraints meaning the crossing
+     * applied at those positions will produce codes that are between the given 
+     * length constraints.
+     * @param that the other tree to be crossed with
+     * @param min_len minimum code length constraint
+     * @param max_len maximum code length constraint
+     * @throws IllegalStateException if positions could not be selected
+     */
+    protected CrossingContext randomCrossingContext(final ReadsTree that, int min_len, int max_len) {
+        final int len1 = this.length();
+        final int len2 = that.length();
+        int pos1 = 0, pos2 = 0, pos1_len = 1, pos2_len = 1;
+
+        // try the "fast" way at first :
+        if (len1 != 1) pos1 = 1 + RandomHelper.randomInt(len1 - 1);
+        if (len2 != 1) pos2 = 1 + RandomHelper.randomInt(len2 - 1);
+        pos1_len = this.subcodeLength(pos1);
+        pos2_len = that.subcodeLength(pos2);
+
+        if ( (len1 - pos1_len + pos2_len < min_len)
+          || (len1 - pos1_len + pos2_len > max_len)
+          || (len2 - pos2_len + pos1_len < min_len)
+          || (len2 - pos2_len + pos1_len > max_len) ) {
+            // no luck thus collect all valid posibilities :
+            ArrayList validContexts = new ArrayList();
+            for (int i1=1; i1<len1; i1++) {
+                for (int i2=1; i1<len2; i2++) {
+                    pos1 = i1; pos1_len = this.subcodeLength(pos1);
+                    pos2 = i2; pos2_len = that.subcodeLength(pos2);
+                    if ( (len1 - pos1_len + pos2_len >= min_len)
+                      && (len1 - pos1_len + pos2_len <= max_len)
+                      && (len2 - pos2_len + pos1_len >= min_len)
+                      && (len2 - pos2_len + pos1_len <= max_len) ) {
+                        validContexts.add(new CrossingContext(
+                              this, pos1, pos1 + pos1_len,
+                              that, pos2, pos2 + pos2_len)
+                        );
+                    }
+                }
+            }
+            if (validContexts.isEmpty()) {
+                throw new IllegalStateException("could not satisfy min-max length " +
+                        "requirements for crossing context:" +
+                        " this.length = " + len1 + " that.length = " + len2 +
+                        " min length = " + min_len + " max length = " + max_len);
+            }
+
+            int index = RandomHelper.randomInt(validContexts.size());
+            return (CrossingContext) validContexts.get(index);
+        }
+        else {
+            return new CrossingContext(
+                this, pos1, pos1 + pos1_len,
+                that, pos2, pos2 + pos2_len
+            );
         }
 
-        // code exchange:
-        String res1 = this.code.substring(0, pos1);
-        res1 += tree.code.substring(pos2, pos2 + pos2_len);
-        res1 += this.code.substring(pos1 + pos1_len, len1);
-        String res2 = tree.code.substring(0, pos2);
-        res2 += this.code.substring(pos1, pos1 + pos1_len);
-        res2 += tree.code.substring(pos2 + pos2_len, len2);
+        //this.setCrossPosition(pos1, pos1 + pos1_len);
+        //that.setCrossPosition(pos2, pos2 + pos2_len);
+    }
 
-        ReadsTree[] result = new ReadsTree[2];
-        result[0] = new ReadsTree(res1);
-        result[1] = new ReadsTree(res2);
+    protected static class MutationContext {
 
-        return result;
+        final ReadsTree target;
+
+        int index, length;
+
+        MutationContext(ReadsTree target) {
+            this.target = target;
+        }
+
+        public MutationContext(ReadsTree target, int index, int length) {
+            this.target = target;
+            this.index = index;
+            this.length = length;
+        }
+
+        public ReadsTree getTarget() {
+            return target;
+        }
+
+        public int getIndex() {
+            return index;
+        }
+
+        public void setIndex(int index) {
+            this.index = index;
+        }
+
+        public int getLength() {
+            return length;
+        }
+
+        public void setLength(int length) {
+            this.length = length;
+        }
+
+    }
+
+    protected static class CrossingContext {
+
+        final ReadsTree parent1;
+        final ReadsTree parent2;
+
+        int startIndex1, endIndex1;
+        int startIndex2, endIndex2;
+
+        // crossing outcome :
+        private ReadsTree child1;
+        private ReadsTree child2;
+
+        CrossingContext(ReadsTree parent1, ReadsTree parent2) {
+            this.parent1 = parent1;
+            this.parent2 = parent2;
+        }
+
+        public CrossingContext(
+                ReadsTree parent1, int startIndex1,
+                ReadsTree parent2, int startIndex2) {
+            this.parent1 = parent1;
+            this.startIndex1 = startIndex1;
+            this.endIndex1 = startIndex1 + parent1.subcodeLength(startIndex1);
+            this.parent2 = parent2;
+            this.startIndex2 = startIndex2;
+            this.endIndex2 = startIndex2 + parent2.subcodeLength(startIndex2);
+        }
+
+        CrossingContext(
+                ReadsTree parent1, int startIndex1, int endIndex1,
+                ReadsTree parent2, int startIndex2, int endIndex2) {
+            this.parent1 = parent1;
+            this.startIndex1 = startIndex1;
+            this.endIndex1 = endIndex1;
+            this.parent2 = parent2;
+            this.startIndex2 = startIndex2;
+            this.endIndex2 = endIndex2;
+        }
+
+        public ReadsTree getParent1() {
+            return parent1;
+        }
+
+        public ReadsTree getParent2() {
+            return parent2;
+        }
+
+        public int getStartIndex1() {
+            return startIndex1;
+        }
+
+        public void setStartIndex1(int startIndex1) {
+            this.startIndex1 = startIndex1;
+        }
+
+        public int getEndIndex1() {
+            return endIndex1;
+        }
+
+        public void setEndIndex1(int endIndex1) {
+            this.endIndex1 = endIndex1;
+        }
+
+        public int getStartIndex2() {
+            return startIndex2;
+        }
+
+        public void setStartIndex2(int startIndex2) {
+            this.startIndex2 = startIndex2;
+        }
+
+        public int getEndIndex2() {
+            return endIndex2;
+        }
+
+        public void setEndIndex2(int endIndex2) {
+            this.endIndex2 = endIndex2;
+        }
+
+        public ReadsTree getChild1() {
+            return child1;
+        }
+
+        public void setChild1(ReadsTree child1) {
+            this.child1 = child1;
+        }
+
+        public ReadsTree getChild2() {
+            return child2;
+        }
+
+        public void setChild2(ReadsTree child2) {
+            this.child2 = child2;
+        }
+
+    }
+
+    // Object :
+
+    /**
+     * @see Object#equals(java.lang.Object) 
+     */
+    public boolean equals(Object other) {
+        if (other == null) return false;
+        if (other == this) return true;
+        if (other.getClass() == this.getClass()) {
+            ReadsTree that = (ReadsTree) other;
+            return this.code.equals(that.code);
+        }
+        return false;
+    }
+
+    /**
+     * @see Object#hashCode()
+     */
+    public int hashCode() {
+        return 17 * this.code.hashCode();
+    }
+
+    /**
+     * @see Object#clone() 
+     * @return clone of this tree
+     */
+    public Object clone() {
+        ReadsTree clone;
+        try {
+            clone = (ReadsTree) super.clone();
+        }
+        catch (CloneNotSupportedException e) {
+            throw new AssertionError(e);
+        }
+        return clone;
+    }
+
+    /**
+     * @return String representation for debugging purposes
+     */
+    public String toString() {
+        return "ReadsTree: " + code + "";
     }
 
 }

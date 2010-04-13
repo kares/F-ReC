@@ -1,7 +1,6 @@
 package frec.core;
 
-import frec.util.*;
-import java.util.ArrayList;
+import frec.util.RandomHelper;
 
 /**
  * Class <code> Genetix </code> is a class that manages the whole genetic
@@ -11,18 +10,13 @@ import java.util.ArrayList;
  * is advised to overrride this class (at least its <code>run()</code>
  * method).
  */
-
 public class GPModelGenetix extends Genetix {
-    
-    protected GenList gen_list;
 
-    protected int adv_min;
+    protected int currentCodeMin;
+    protected int currentCodeMax;
 
-    protected int adv_max;
-
-    private float reproduct_prob = 0.95f;
-
-    private float selection_prob = 0.85f;
+    private float reproductProbability = 0.95f;
+    private float selectionProbability = 0.85f;
 
     /**
      * Creates a new <code>Genetix</code> object that will work over the
@@ -31,12 +25,9 @@ public class GPModelGenetix extends Genetix {
      * the following functions (function symbols):
      * <code> x+y, x-y, x*y, x/y, x^2, x^3, e^x, abs(x), sqrt(x), ln(x), log(x), min(x,y), max(x,y), sin(x), cos(x), tan(x), asin(x), acos(x), atan(x) </code>
      */
-
     public GPModelGenetix() {
-        gen_list = new GenList(gen_size, gen_size / 3);
-        int[] limits = GenetixFunction.getFunctionCodeLengthLimits();
-        adv_min = limits[0];
-        adv_max = limits[1];
+        currentCodeMin = GenetixFunction.getFunctionCodeMinLength();
+        currentCodeMax = GenetixFunction.getFunctionCodeMaxLength();
     }
 
     /**
@@ -49,111 +40,87 @@ public class GPModelGenetix extends Genetix {
      * @param arity
      *            Arity of the provided symbols.
      */
-
+    /*
     public GPModelGenetix(char[] symbol, byte[] arity) {
         this();
         setSymbols(symbol, arity);
     }
+    */
 
-    public void run() {
+    protected void computeInit() {
         initializeGeneration();
         checkFitnessErrors();
+        final int generationSize = getGenerationSize();
         int max = 100;
-        while (gen.length < gen_size / 2) {
+        while ( getCurrentGeneration().length < generationSize / 2 ) {
             if (--max == 0) break;
             initializeGeneration();
             checkFitnessErrors();
         }
         max = 100;
-        while (gen.length < gen_size) {
+        while ( getCurrentGeneration().length < generationSize ) {
             if (--max == 0) break;
-            super.addNewToGeneration(gen_size - gen.length);
+            final int len = getCurrentGeneration().length;
+            super.addNewToGeneration(generationSize - len);
             checkFitnessErrors();
         }
         checkPopulationErrors();
-        if (gen.length < gen_size)
-            super.addNewToGeneration(gen_size - gen.length);
+        if ( getCurrentGeneration().length < generationSize ) {
+            final int len = getCurrentGeneration().length;
+            super.addNewToGeneration(generationSize - len);
+        }
+        GenetixFunction.setFunctionCodeLengthLimits(++currentCodeMin, ++currentCodeMax);
+    }
 
-        GenetixFunction.setFunctionCodeLengthLimits(++adv_min, ++adv_max);
-
-        if (isSaving)
-            while (genCounter < maxCounter) {
-                saveGeneration();
-                int select_size = Math.round((float) gen_size * selection_prob);
-                selectBest(select_size);
-                crossGeneration();
-                mutateGeneration();
-                reproductGeneration();
-                addNewToGeneration(gen_size / 10);
-                gen = new GenetixFunction[gen_list.size()];
-                gen = (GenetixFunction[]) gen_list.toArray(gen);
-                gen_list.clear();
-                validate(gen);
-                checkFitnessErrors();
-                checkPopulationErrors();
-                if (gen.length < gen_size)
-                    super.addNewToGeneration(gen_size - gen.length);
-                selectBest(gen_size);
-                if (genCounter % 2 == 0)
-                    GenetixFunction.setFunctionCodeLengthLimits(--adv_min,
-                            --adv_max);
-                else
-                    GenetixFunction.setFunctionCodeLengthLimits(++adv_min,
-                            ++adv_max);
-                genCounter++;
-            }
-        else
-            while (genCounter < maxCounter) {
-                int select_size = Math.round((float) gen_size * selection_prob);
-                selectBest(select_size);
-                crossGeneration();
-                mutateGeneration();
-                reproductGeneration();
-                addNewToGeneration(gen_size / 10);
-                gen = new GenetixFunction[gen_list.size()];
-                gen = (GenetixFunction[]) gen_list.toArray(gen);
-                gen_list.clear();
-                validate(gen);
-                checkFitnessErrors();
-                checkPopulationErrors();
-                if (gen.length < gen_size)
-                    super.addNewToGeneration(gen_size - gen.length);
-                selectBest(gen_size);
-                if (genCounter % 2 == 0)
-                    GenetixFunction.setFunctionCodeLengthLimits(--adv_min,
-                            --adv_max);
-                else
-                    GenetixFunction.setFunctionCodeLengthLimits(++adv_min,
-                            ++adv_max);
-                genCounter++;
-            }
-
-        hasFinished = true;
+    protected void computeNext() {
+        final int generationSize = getGenerationSize();
+        int select_size = Math.round(generationSize * selectionProbability);
+        selectBest(select_size);
+        crossGeneration();
+        mutateGeneration();
+        reproductGeneration();
+        addNewToGeneration(generationSize / 10);
+        computeFitness();
+        checkFitnessErrors();
+        checkPopulationErrors();
+        if ( getCurrentGeneration().length < generationSize ) {
+            final int len = getCurrentGeneration().length;
+            super.addNewToGeneration(generationSize - len);
+        }
+        selectBest(generationSize);
+        if ( getGenerationCounter() % 2 == 0 ) {
+            GenetixFunction.setFunctionCodeLengthLimits(--currentCodeMin, --currentCodeMax);
+        } else {
+            GenetixFunction.setFunctionCodeLengthLimits(++currentCodeMin, ++currentCodeMax);
+        }
     }
 
     /**
      * This is used for initialization, the starting generation is initialized
      * randomly and its fitness values are computed.
      */
-
-    protected synchronized void initializeGeneration() {
-        gen = GenetixFunction.generate(gen_size, 1 + (adv_min + adv_max) / 2);
-        validate(gen);
+    protected void initializeGeneration() {
+        final int generationSize = getGenerationSize();
+        setCurrentGeneration( generateFunctions(generationSize, 1 + (currentCodeMin + currentCodeMax) / 2) );
+        computeFitness();
     }
 
     /**
      * This method mutates the actual generation. All the functions might be
      * mutated, the mutation process is managed using a mutation probability.
      */
-
-    protected synchronized void mutateGeneration() {
+    protected void mutateGeneration() {
         float prob = getMutationProbability();
-        for (int i = 0; i < gen.length; i++)
-            if (Generator.randomBoolean(prob)) {
-                GenetixFunction mut = (GenetixFunction) gen[i].clone();
-                mut.mutateFunction(usesArbitraryMutations());
+        GenetixFunction.Tuple gen_list = getCurrentGenerationAsTuple();
+        final GenetixFunction[] currentGeneration = getCurrentGeneration();
+        for (int i = 0; i < currentGeneration.length; i++) {
+            if (RandomHelper.randomBoolean(prob)) {
+                GenetixFunction mut = (GenetixFunction) currentGeneration[i].clone();
+                mut.mutateFunction(isArbitraryMutations());
                 gen_list.add(mut);
             }
+        }
+        setCurrentGeneration(gen_list);
     }
 
     /**
@@ -161,21 +128,23 @@ public class GPModelGenetix extends Genetix {
      * functions might contribute to the new generation, the process is managed
      * using a crossing probability.
      */
-
-    protected synchronized void crossGeneration() {
-        int len = gen.length;
+    protected void crossGeneration() {
         float prob = getCrossingProbability();
-        for (int i = 0; i < gen.length; i++)
-            if (Generator.randomBoolean(prob * (1 - i / gen.length))) {
-                int rnd = Generator.ascRandomInt(len);
-                while (rnd == i)
-                    rnd = Generator.ascRandomInt(len);
-                GenetixFunction new1 = gen[i];
-                GenetixFunction new2 = gen[rnd];
-                new1.crossFunctions(new2, usesArbitraryCrossings());
+        GenetixFunction.Tuple gen_list = getCurrentGenerationAsTuple();
+        final GenetixFunction[] currentGeneration = getCurrentGeneration();
+        final int len = currentGeneration.length;
+        for (int i = 0; i < len; i++) {
+            if (RandomHelper.randomBoolean(prob * (1 - i / currentGeneration.length))) {
+                int rnd = RandomHelper.ascRandomInt(len);
+                while (rnd == i) rnd = RandomHelper.ascRandomInt(len);
+                GenetixFunction new1 = currentGeneration[i];
+                GenetixFunction new2 = currentGeneration[rnd];
+                new1.crossFunctions(new2, isArbitraryCrossings());
                 gen_list.add(new1);
                 gen_list.add(new2);
             }
+        }
+        setCurrentGeneration(gen_list);
     }
 
     /**
@@ -183,62 +152,62 @@ public class GPModelGenetix extends Genetix {
      * functions might contribute to the new generation, the process is managed
      * using a crossing probability.
      */
-
-    protected synchronized void reproductGeneration() {
-        int len = gen.length;
-        float prob = reproduct_prob;
-        for (int i = 0; i < gen.length; i++)
-            if (Generator.randomBoolean(prob)) {
-                prob = reproduct_prob * ((i + 1) / (gen.length + 1));
-                prob = reproduct_prob - prob;
-                gen_list.add(gen[i]);
+    protected void reproductGeneration() {
+        float prob = reproductProbability;
+        GenetixFunction.Tuple gen_list = getCurrentGenerationAsTuple();
+        final GenetixFunction[] currentGeneration = getCurrentGeneration();
+        final int len = currentGeneration.length;
+        for (int i = 0; i < len; i++) {
+            if (RandomHelper.randomBoolean(prob)) {
+                prob = reproductProbability * ((i + 1) / (len + 1));
+                prob = reproductProbability - prob;
+                gen_list.add(currentGeneration[i]);
             }
+        }
+        setCurrentGeneration(gen_list);
     }
 
     /**
      * This method adds (randomly generated) functions to the current
      * generation, the number of functions added is specified by the parameter.
      * 
-     * @param limit
-     *            The size of the set of functions added to the current
-     *            generation.
+     * @param limit the size of the set of functions added to the current generation
      */
-
-    protected synchronized void addNewToGeneration(int limit) {
-        if (gen.length + limit > gen_size) limit = gen_size - gen.length;
-        GenetixFunction[] rnd_gen = GenetixFunction.generate(limit);
-        gen_list.addAll(rnd_gen);
+    protected void addNewToGeneration(int limit) {
+        //if (currentGeneration.length < generationSize && currentGeneration.length + limit > generationSize) {
+        //    limit = generationSize - currentGeneration.length;
+        //}
+        GenetixFunction.Tuple gen_list = getCurrentGenerationAsTuple();
+        gen_list.addAll( generateFunctions(limit) );
+        setCurrentGeneration(gen_list);
     }
 
     /**
      * Sets the reproduction probability.
      */
-
     public void setReproductProbability(float prob) {
-        this.reproduct_prob = prob;
+        this.reproductProbability = prob;
     }
 
     /**
      * Sets the reproduction probability.
      */
-
     public float getReproductProbability() {
-        return reproduct_prob;
+        return reproductProbability;
     }
 
     /**
      * Sets the selection probability.
      */
-
     public void setSelectionProbability(float prob) {
-        this.selection_prob = prob;
+        this.selectionProbability = prob;
     }
 
     /**
      * Sets the reproduction probability.
      */
-
     public float getSelectionProbability() {
-        return selection_prob;
+        return selectionProbability;
     }
+    
 }

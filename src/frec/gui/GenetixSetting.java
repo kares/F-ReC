@@ -1,29 +1,46 @@
 
 package frec.gui;
 
-import java.awt.*;
-import java.awt.event.*;
+import frec.core.GPModelGenetix;
+import frec.core.Genetix;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.FlowLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Panel;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import javax.swing.*;
-import javax.swing.event.*;
-import javax.swing.border.*;
-import java.io.File;
+import javax.swing.border.EmptyBorder;
 
-    /**
-     * Class <code> GenetixSetting </code> is an gui panel
-     * which is used to set the parameters of genetic programming.
-     * An instance of this class is the first think the user sees
-     * when runing the application.
-     */
-
+/**
+ * Class <code> GenetixSetting </code> is an gui panel
+ * which is used to set the parameters of genetic programming.
+ * An instance of this class is the first think the user sees
+ * when runing the application.
+ */
 public class GenetixSetting extends JPanel 
 {    
     private JLabel size, max, mut, cross, minf, maxf, repro, sel, data;
     private JTextField tsize, tmax, tmut, tcross, tminf, tmaxf, trepro, tsel, tdata;
-    private JRadioButton advan;
+    //private JRadioButton advan;
     private JCheckBox cmut, ccross;
     private JComboBox combo;
-    private String sel_genetix;
+    private String selModel;
+    
     private boolean isReady = false;
+    private ActionListener readyListener = null;
 
     /**
      * Constructor that creates a new <code>GenetixSetting</code>
@@ -32,6 +49,11 @@ public class GenetixSetting extends JPanel
      */    
     
     public GenetixSetting() 
+    {
+        buildUI();
+    }       
+
+    public GenetixSetting buildUI()
     {
         data  = new JLabel(" Training data size ");
         size  = new JLabel(" Size of generation ");
@@ -42,12 +64,12 @@ public class GenetixSetting extends JPanel
         cross = new JLabel(" Crossing  probab.  ");
         repro = new JLabel(" Reproduct probab.");
         sel   = new JLabel(" Selection  probab. ");
-        
+
         cmut   = new JCheckBox(" Use arbitrary mutations ");
         ccross = new JCheckBox(" Use arbitrary crossings  ");
-        
+
         EmptyBorder border = new EmptyBorder(5,0,5,2);
-        
+
         data .setBorder(border);
         size .setBorder(border);
         max  .setBorder(border);
@@ -57,7 +79,7 @@ public class GenetixSetting extends JPanel
         cross.setBorder(border);
         repro.setBorder(border);
         sel  .setBorder(border);
-        
+
         tdata  = new JTextField("300", 8);
         tsize  = new JTextField("100", 8);
         tmax   = new JTextField("200", 8);
@@ -66,68 +88,44 @@ public class GenetixSetting extends JPanel
         tmut   = new JTextField("0.025", 8);
         tcross = new JTextField("0.900", 8);
         trepro = new JTextField("0.950", 8);
-        tsel   = new JTextField("0.850", 8);      
-        
-        trepro.setEnabled(false);
-        tsel.setEnabled(false);
-        
+        tsel   = new JTextField("0.850", 8);
+
+        //trepro.setEnabled(false);
+        //tsel.setEnabled(false);
+
         JButton okay = new JButton("  OK  ");
-        okay.addMouseListener(new MouseAdapter()
+        okay.addActionListener(new ActionListener()
         {
-            public void mousePressed(MouseEvent evt) 
+            public void actionPerformed(ActionEvent e)
             {
+                setVisible(false);
                 isReady = true;
-                GenetixSetting.this.setVisible(false);
+                readyListener.actionPerformed(e);
             }
-        }); 
-        
+        });
+
         JButton exit = new JButton(" EXIT ");
-        exit.addMouseListener(new MouseAdapter()
+        exit.addActionListener(new ActionListener()
         {
-            public void mousePressed(MouseEvent evt) 
+            public void actionPerformed(ActionEvent e)
             {
-                GenetixSetting.this.setVisible(false);
+                setVisible(false);
                 System.exit(0);
             }
-        });         
+        });
 
-        /*
-        JRadioButton basic = new JRadioButton("GAModel");
-        advan = new JRadioButton("GPModel")
-        {
-            protected void fireStateChanged() 
-            {
-                if (trepro.isEnabled())
-                {
-                    trepro.setEnabled(false);
-                    tsel.setEnabled(false);                
-                }
-                else
-                {
-                    trepro.setEnabled(true);
-                    tsel.setEnabled(true);                
-                }                    
-            }
-        };
-
-        ButtonGroup group = new ButtonGroup();
-        group.add(basic);
-        group.add(advan);
-        basic.setSelected(true);
-        */
-        
         Panel panel = new Panel();
         GridBagLayout layout = new GridBagLayout();
         GridBagConstraints c = new GridBagConstraints();
         panel.setLayout(layout);
 
-        c.fill = GridBagConstraints.BOTH;        
+        c.fill = GridBagConstraints.BOTH;
         c.gridwidth = GridBagConstraints.RELATIVE;
         layout.setConstraints(data, c);
         panel.add(data);
      	c.gridwidth = GridBagConstraints.REMAINDER; //end row
         layout.setConstraints(tdata, c);
-        panel.add(tdata);        
+        panel.add(tdata);
         c.gridwidth = GridBagConstraints.RELATIVE;
         layout.setConstraints(size, c);
         panel.add(size);
@@ -151,7 +149,7 @@ public class GenetixSetting extends JPanel
         panel.add(maxf);
      	c.gridwidth = GridBagConstraints.REMAINDER; //end row
         layout.setConstraints(tmaxf, c);
-        panel.add(tmaxf); 
+        panel.add(tmaxf);
         c.gridwidth = GridBagConstraints.RELATIVE;
         layout.setConstraints(mut, c);
         panel.add(mut);
@@ -169,39 +167,39 @@ public class GenetixSetting extends JPanel
         panel.add(sel);
      	c.gridwidth = GridBagConstraints.REMAINDER; //end row
         layout.setConstraints(tsel, c);
-        panel.add(tsel);                
-        c.gridwidth = GridBagConstraints.RELATIVE;        
+        panel.add(tsel);
+        c.gridwidth = GridBagConstraints.RELATIVE;
         layout.setConstraints(repro, c);
         panel.add(repro);
      	c.gridwidth = GridBagConstraints.REMAINDER; //end row
         layout.setConstraints(trepro, c);
         panel.add(trepro);
-        
+
         Panel p = new Panel();
         p.add(new JLabel());
      	c.gridwidth = GridBagConstraints.REMAINDER; //end row
         layout.setConstraints(p, c);
-        panel.add(p);        
-        
+        panel.add(p);
+
         p = new Panel();
         p.add(cmut, BorderLayout.CENTER);
      	c.gridwidth = GridBagConstraints.REMAINDER; //end row
         layout.setConstraints(p, c);
         panel.add(p);
-        
+
         p = new Panel();
         p.add(ccross, BorderLayout.CENTER);
      	c.gridwidth = GridBagConstraints.REMAINDER; //end row
         layout.setConstraints(p, c);
         panel.add(p);
-        
+
         //p = new Panel();
         //p.add(basic);
-        //p.add(advan);        
+        //p.add(advan);
         //c.gridwidth = GridBagConstraints.REMAINDER; //end row
         //layout.setConstraints(p, c);
-        //panel.add(p);  
-        
+        //panel.add(p);
+
         combo = new JComboBox(getGenetixClassNames());
         combo.setBackground(Color.WHITE);
         p = new Panel(new FlowLayout());
@@ -209,45 +207,42 @@ public class GenetixSetting extends JPanel
         p.add(combo);
      	c.gridwidth = GridBagConstraints.REMAINDER; //end row
         layout.setConstraints(p, c);
-        panel.add(p); 
-        
-        sel_genetix = (String)combo.getSelectedItem();
+        panel.add(p);
+
+        selModel = (String) combo.getSelectedItem();
         combo.addItemListener(new ItemListener()
         {
-            public void itemStateChanged(ItemEvent e) 
+            public void itemStateChanged(ItemEvent e)
             {
-                sel_genetix = (String)combo.getSelectedItem();
-                if (sel_genetix.equals("GAModelGenetix"))
-                {
-                    trepro.setEnabled(false);
-                    tsel.setEnabled(false);                
-                }
-                else
-                {
-                    trepro.setEnabled(true);
-                    tsel.setEnabled(true);                
-                }                   
-                  
+                selModel = (String) combo.getSelectedItem();
+                boolean advSettings =
+                    GPModelGenetix.class.isAssignableFrom(getSelModelClass());
+                trepro.setEnabled(advSettings);
+                tsel.setEnabled(advSettings);
             }
         });
-        
+
         p = new Panel();
         p.add(new JLabel());
      	c.gridwidth = GridBagConstraints.REMAINDER; //end row
         layout.setConstraints(p, c);
-        panel.add(p);          
-        
-        this.setLayout(new BorderLayout());
-        this.setBorder(BorderFactory.createEmptyBorder(3, 8, 3, 8));
+        panel.add(p);
+
+        setLayout(new BorderLayout());
+        setBorder(BorderFactory.createEmptyBorder(3, 8, 3, 8));
+
         p = new Panel(new FlowLayout());
-        p.add(new JLabel("GENETIX SETTING PANEL"));        
-        this.add(p, BorderLayout.NORTH);
-        this.add(panel, BorderLayout.CENTER);
+        p.add(new JLabel("GENETIX SETTING PANEL"));
+        add(p, BorderLayout.NORTH);
+        add(panel, BorderLayout.CENTER);
+
         p = new Panel(new FlowLayout());
         p.add(okay);
-        p.add(exit);        
-        this.add(p,  BorderLayout.SOUTH);
-    }       
+        p.add(exit);
+        add(p,  BorderLayout.SOUTH);
+
+        return this;
+    }
 
     /**
      * Method to receive this panel's input data.
@@ -326,21 +321,6 @@ public class GenetixSetting extends JPanel
         return Float.parseFloat(tsel.getText());
     }   
 
-    /**
-     * This indicates that the object is in advanced mode
-     * that means that more setting parameters will be used
-     * and an advanced genetical programming will be used 
-     * instead of the basic one.
-     *
-     * @return The state indicating if the advanced checkbox
-     * has been selected.
-     */                
-    
-    public String getGenModel()
-    {
-        return sel_genetix;
-    }
-
     public boolean getArbitraryMutationsUsage()
     {
         return cmut.isSelected();
@@ -350,36 +330,67 @@ public class GenetixSetting extends JPanel
     {
         return ccross.isSelected();
     }
-    
+
+    /**
+     * This indicates that the object is in advanced mode
+     * that means that more setting parameters will be used
+     * and an advanced genetical programming will be used
+     * instead of the basic one.
+     *
+     * @return The state indicating if the advanced checkbox
+     * has been selected.
+     */
+    public String getSelModelName()
+    {
+        return selModel;
+    }
+
+    public Class getSelModelClass()
+    {
+        return (Class) modelClassNames.get(selModel);
+    }
+
+    private static Map modelClassNames = new LinkedHashMap();
+    static {
+        for (Iterator i = Genetix.getGenetixModels().iterator(); i.hasNext();) {
+            Class genetixModel = (Class) i.next();
+            String name = genetixModel.getName();
+            name = name.substring(name.lastIndexOf('.') + 1);
+            modelClassNames.put(name, genetixModel);
+        }
+    }
+
+    private String[] getGenetixClassNames()
+    {
+        Collection names = modelClassNames.keySet();
+        return (String[]) names.toArray(new String[names.size()]);
+    }
+
     /**
      * This indicates that the object is isReady, meaning
      * that the user has finished setting the parameters. 
      *
+     * @deprecated
      * @return The state of this panel.
      */            
-    
     public boolean isReady()
     {
         return isReady;
     }   
-    
-    
-    private String[] getGenetixClassNames()
+
+    public GenetixSetting setReadyListener(ActionListener readyListener)
     {
-        return new String[] {
-            "GAModelGenetix", 
-            "GPModelGenetix", 
-            "MyModelGenetix"
-        };
+        this.readyListener = readyListener;
+        return this;
     }
-   
+
     public static void main(String[] args)
     {
         GenetixSetting set = new GenetixSetting();
-        JFrame f = new JFrame();
-        f.getContentPane().add(set);
-        f.pack();
-        f.show();
+        final JFrame frame = new JFrame();
+        frame.getContentPane().add(set);
+        frame.pack();
+        frame.setVisible(true);
     }
     
 }

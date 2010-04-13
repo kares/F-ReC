@@ -1,97 +1,149 @@
 
 package frec.core;
 
-import frec.util.*;
+import frec.util.GenFile;
+import frec.util.RandomHelper;
+import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
-    /**
-     * Class <code> Genetix </code> is a class that manages the whole
-     * genetic programming performed over <code>Function</code> objects.
-     * This class is designed to provide the basic genetic algorithm 
-     * (standart scheme) with some optimalization for the purposes of the
-     * F-ReC project. For more effectivity it is advised to overrride this
-     * class (at least its <code>run()</code> method).
-     */
-
-public abstract class Genetix implements Runnable
-{
-    /** The (actual) generation (includes the fitness). */
-    protected GenetixFunction[] gen;
+/**
+ * Class <code> Genetix </code> is a class that manages the whole
+ * genetic programming performed over <code>FunctionTree</code> objects.
+ * This class is designed to provide the basic genetic algorithm
+ * (standart scheme) with some optimalization for the purposes of the
+ * F-ReC project. For more effectivity it is advised to overrride this
+ * class (at least its <code>run()</code> method).
+ */
+public abstract class Genetix implements Runnable {
     
     /** 
-     * The size of the generation (how many elements are used). 
-     * Default = 100.
+     * The (actual) generation (includes the fitness).
      */
-    protected int gen_size = 100;
-    
-    /** Generation counter - how many generations have been created yet. */
-    protected int genCounter = 0;
+    private GenetixFunction[] currentGeneration;
     
     /** 
-     * Generation counter limit - how many generations will be created. 
-     * Default = 100. 
+     * The size of one generation, default is 100.
      */
-    protected int maxCounter = 100;    
+    private int generationSize = 100;
     
-    /** This indicates whether computing is done. */
-    protected boolean hasFinished = false;
-
-    /** This indicates whether saving is enabled (running in application mode). */
-    protected boolean isSaving = false;    
+    /** How many generations have been created so far. */
+    private int generationCounter = 0;
+    
+    /** 
+     * How many generations will be created before computing ends, default = 100.
+     */
+    private int generationLimit = 100;
     
     private boolean arbitraryMutations = false;
     private boolean arbitraryCrossings = false;    
     
-    private float[] data_x;
-    private float[] data_y;
+    private double[] dataX, dataY;
 
-    private float mutation_prob = 0.03f;
-    private float crossing_prob = 0.90f;
-    
-    private float bestFitness = Float.NaN;
+    private float mutationProbability = 0.03f;
+    private float crossingProbability = 0.90f;
 
+    private long instancesCreated = 0;
+
+    private double bestFitness = Float.NaN;
+
+    /** This indicates whether saving is enabled (running in application mode). */
+    private boolean isSaving = false;
     private GenFile genFile;
     
+    protected Genetix() {
+        // NOOP
+    }
+
+    public static Set getGenetixModels() {
+        Set genetixClasses = new LinkedHashSet();
+        genetixClasses.add(GYModelGenetix.class);
+        genetixClasses.add(GPModelGenetix.class);
+        genetixClasses.add(GAModelGenetix.class);
+        return genetixClasses;
+    }
+
     /**
-     * Creates a new <code>Genetix</code> object that will work over the default
-     * symbol set. The symbol set will be set for the <code>Function</code> class later. 
-     * The default symbol set consists of the following functions (function symbols): 
-     * <code> x+y, x-y, x*y, x/y, x^2, x^3, e^x, abs(x), sqrt(x), ln(x), log(x), min(x,y), max(x,y), sin(x), cos(x), tan(x), asin(x), acos(x), atan(x) </code>
-     *
-     */      
-    
-    protected Genetix()
-    {
-        long seed = 0x00000000ffffffffL;
-        long rnd = 0x0000000021abcdefL;
-        seed = seed & (((System.currentTimeMillis() << 1) * seed + rnd ) >> 2 );
-        rnd = rnd ^ Double.doubleToLongBits(Math.random());
-        seed = ((seed + rnd) >> 1) * (seed >> 1);
-        int[] s = new int[600];
-        for (int i=0; i<600; i++)
-            s[i] = (int)((seed ^ System.currentTimeMillis()) + rnd * i)
-                + ((int)(Math.random() * (double)Integer.MAX_VALUE) >> 1);
-        Generator.init(s);
-        if (isSaving) genFile = new GenFile();
+     * Sets the minimal length of functions to be created.
+     */
+    public static void setMinFunctionLength(int min_len) {
+        GenetixFunction.setFunctionCodeLengthLimits(min_len, -1);
+    }
+
+    /**
+     * Sets the maximal length of functions to be created.
+     */
+    public static void setMaxFunctionLength(int max_len) {
+        GenetixFunction.setFunctionCodeLengthLimits(-1, max_len);
     }
 
     /**
      * This method causes this object (as a <code>Thread</code>) to
      * start execution.
      */        
-    
-    public abstract void run() ;
+    public void run() {
+        compute();
+        if ( computeStopped() ) computing = null;
+        else notifyComputed();
+    }
+
+    /**
+     * Compute this genetix.
+     */
+    public void compute() {
+        computing = Boolean.TRUE;
+        computeInit();
+        while (generationCounter < generationLimit) {
+            if ( computeStopped() ) return;
+            if ( isSaving ) saveGeneration();
+            computeNext();
+
+            debugGeneration( System.out );
+            
+            generationCounter++;
+        }
+        computing = null;
+    }
+
+    protected abstract void computeInit() ;
+
+    protected abstract void computeNext() ;
+
+    private volatile Boolean computing = null;
+
+    private boolean computeStopped() {
+        if ( computing == null ) return false;
+        return ! computing.booleanValue();
+    }
+
+    public void stopCompute() {
+        computing = Boolean.FALSE;
+    }
+
+    protected GenetixFunction[] generateFunctions(int size) {
+        instancesCreated += size;
+        return GenetixFunction.generate(size);
+    }
+
+    protected GenetixFunction[] generateFunctions(int size, int length) {
+        instancesCreated += size;
+        return GenetixFunction.generate(size, length);
+    }
+
+    protected GenetixFunction[] generateFunctions(int size, boolean shorter) {
+        instancesCreated += size;
+        return GenetixFunction.generate(size, shorter);
+    }
 
     /**
      * This is used for initialization, the starting generation
      * is initialized randomly and its fitness values are computed.
-     *
-     */        
-    
-    protected synchronized void initializeGeneration()
-    {
-        gen = GenetixFunction.generate(gen_size);
-        validate(gen);
+     */
+    protected void initializeGeneration() {
+        setCurrentGeneration( generateFunctions(generationSize) );
+        computeFitness( getCurrentGeneration() );
     }
 
     /**
@@ -100,99 +152,82 @@ public abstract class Genetix implements Runnable
      * Functions of the first generation are created to have the
      * specified length.
      *
-     * @param code_len Length of the functions forming the initial generation.
-     *
-     */            
-    
-    protected synchronized void initializeGeneration(int code_len)
-    {
-        gen = GenetixFunction.generate(gen_size, code_len);
-        validate(gen);
+     * @param codeLength Length of the functions forming the initial generation.
+     */
+    protected void initializeGeneration(int codeLength) {
+        setCurrentGeneration( generateFunctions(generationSize, codeLength) );
+        computeFitness();
     }
         
     /**
      * This method validates the functions provided, meaning that it
      * computes the fitness values.
      *
-     * @param function Array containing the functions to be validated.
-     * @return function Array containing the functions to be validated.
-     */                
-    
-    protected synchronized void validate(GenetixFunction[] gp)
-    {
-        float[] func_y = new float[data_x.length];
-        for (int i=0; i<gp.length; i++)
-        {
-            for (int j=0; j<func_y.length; j++)
-                func_y[j] = gp[i].getFunctionValue(data_x[j]);
-            gp[i].setFitness(GenMath.E(data_y, func_y));
-        }
+     * @param genFxs functions to be validated.
+     */
+    protected void computeFitness() {
+        computeFitness( getCurrentGeneration() );
     }
     
     /**
      * This method checks for bad functions in the current generation.
      * Bad functions are functions with not defined function values and
      * so the fitness value of such function is also undefined.
-     *
-     */    
-
-    protected synchronized void checkFitnessErrors()
-    {
-        int ind = 0;
-        int[] index = new int[gen.length];
-        for (int i=0; i<gen.length; i++)
-            if (gen[i].isValid())
-                index[ind++] = i;
-
-        if (ind==gen.length) return;
-        GenetixFunction[] tmp_gen = gen;
-        gen = new GenetixFunction[ind];
-        for (int i=0; i<ind; i++)
-            gen[i] = tmp_gen[index[i]];
+     */
+    protected void checkFitnessErrors() {
+        final GenetixFunction[] currentGeneration = getCurrentGeneration();
+        int size = 0;
+        int[] index = new int[currentGeneration.length];
+        for ( int i=0; i<currentGeneration.length; i++ ) {
+            if ( currentGeneration[i].isFitnessValid() ) index[size++] = i;
+        }
+        if ( size == currentGeneration.length ) return;
+        GenetixFunction[] validGeneration = new GenetixFunction[size];
+        for (int i=0; i<size; i++) {
+            validGeneration[i] = currentGeneration[index[i]];
+        }
+        setCurrentGeneration( validGeneration );
     }
     
     /**
      * This method checks for equal functions in the current generation.
-     * First it checks all the functions calling the <code>f.check()</code>
+     * First it checks all the functions calling the <code>f.removeInverseElements()</code>
      * method. Then it checks if there are functiona equal to each other in
      * the current generation.
-     *
      */    
+    protected void checkPopulationErrors() {
+        final GenetixFunction[] currentGeneration = getCurrentGeneration();
+        final int[] index = new int[currentGeneration.length];
+        int invalidSize = 0;
 
-    protected synchronized void checkPopulationErrors()
-    {
-        for (int i=0; i<gen.length; i++)
-            if (!gen[i].checkFunction())
-                gen[i] = null;
-        
-        int[] index = new int[gen.length];
-        int ind = 0;
-        for (int i=0; i<gen.length; i++)
-        {
-            if (gen[i]==null) index[i] = -1;
-            if (index[i]==-1)
-            {
-                ind++;
-                continue;
+        for (int i=0; i<currentGeneration.length; i++) {
+            final boolean valid = currentGeneration[i].checkFunction();
+            if ( ! valid ) {
+                index[i] = -1;
+                invalidSize++;
             }
-            for (int j=i+1; j<gen.length; j++)
-                if ((index[j]!=-1) 
-                && (gen[j]!=null)
-                && (gen[i].equals(gen[j])))
-                    index[j] = -1;
         }
         
-        if (ind!=0)
-        {
-            GenetixFunction[] tmp_gen = gen;
-            ind = gen.length - ind;
-            gen = new GenetixFunction[ind];
-            int j = 0;
-            for (int i=0; i<ind; i++)
-            {
-                while (index[j]==-1) j++;
-                gen[i] = tmp_gen[j++];
+        for (int i=0; i<currentGeneration.length; i++) {
+            if ( index[i] == -1 ) continue;
+            for (int j=i+1; j<currentGeneration.length; j++) {
+                if ( index[j] == -1 ) continue;
+                if ( currentGeneration[i].equals(currentGeneration[j]) ) {
+                    index[j] = -1;
+                    invalidSize++;
+                }
             }
+        }
+        
+        if ( invalidSize > 0 ) {
+            final int size = currentGeneration.length - invalidSize;
+            GenetixFunction[] validGeneration = new GenetixFunction[size];
+            int j = 0;
+            for (int i=0; i<size; i++) {
+                while ( index[j] == -1 ) j++;
+                validGeneration[i] = currentGeneration[j++];
+            }
+            setCurrentGeneration(validGeneration);
         }
     }    
 
@@ -204,16 +239,17 @@ public abstract class Genetix implements Runnable
      * @param limit The limit of functions selected.
      *
      */    
-    
-    protected synchronized void selectBest(int limit)
-    {
-        if (gen.length < limit) limit = gen.length;
-        Arrays.sort(gen);
-        GenetixFunction[] sel = 
-            new GenetixFunction[limit];
-        System.arraycopy(gen, 0, sel, 0, limit);
-        gen = sel;
-        bestFitness = gen[0].getFitness();
+    protected void selectBest(int limit) {
+        final GenetixFunction[] currentGeneration = getCurrentGeneration();
+        if ( currentGeneration.length < limit ) {
+            limit = currentGeneration.length;
+        }
+        if ( limit <= 0 ) return;
+        Arrays.sort( currentGeneration );
+        GenetixFunction[] selected = new GenetixFunction[limit];
+        System.arraycopy(currentGeneration, 0, selected, 0, limit);
+        setCurrentGeneration(selected);
+        bestFitness = selected[0].getFitness();
     }
     
     /**
@@ -222,136 +258,205 @@ public abstract class Genetix implements Runnable
      * process is managed using a mutation probability.
      *
      */        
-
-    protected synchronized void mutateGeneration()
-    {   
-       for (int i=0; i<gen.length; i++)
-           if (Generator.randomBoolean(mutation_prob))
-               if (gen[i].getFitness() > 3 * bestFitness)
-               {
-                   GenetixFunction org = (GenetixFunction)gen[i].clone();
-                   gen[i].mutateFunction(arbitraryMutations);
-                   float[] func_y = new float[data_x.length];
-                   for (int j=0; j<func_y.length; j++)
-                       func_y[j] = gen[i].getFunctionValue(data_x[j]);
-                   if (!gen[i].setFitness(GenMath.E(data_y, func_y)))
-                       gen[i] = org;
+    protected void mutateGeneration() {
+       for (int i=0; i<currentGeneration.length; i++) {
+           final GenetixFunction fx = currentGeneration[i];
+           if ( RandomHelper.randomBoolean(mutationProbability) ) {
+               if (fx.getFitness() > 3 * bestFitness) {
+                   GenetixFunction org = (GenetixFunction) fx.clone();
+                   fx.mutateFunction(arbitraryMutations);
+                   if ( ! computeFitness(fx) ) currentGeneration[i] = org;
                }
+           }
+       }
     }
     
     /**
      * This method crosses the functions of the actual generation.
      * All the functions might contribute to the new generation, 
      * the process is managed using a crossing probability.
-     *
-     */            
-
-    protected synchronized void crossGeneration()
-    {
-        int len = gen.length;
+     */
+    protected void crossGeneration() {
+        int len = currentGeneration.length;
         int new_len = 2 * len;
-        GenetixFunction[] new_gen = 
-            new GenetixFunction[new_len];
-        int size = 0;
-        while (size < new_len)
-            if (Generator.randomBoolean(crossing_prob))
-            {
-                int rnd1 = 1+Generator.ascRandomInt(len-1);
-                int rnd2 = Generator.ascRandomInt(len);
-                if (rnd1 < rnd2) rnd1 = rnd2;
-                rnd2 = Generator.randomInt(rnd1);
-                new_gen[size] = (GenetixFunction)gen[rnd1].clone();
-                new_gen[size+1] = (GenetixFunction)gen[rnd2].clone();
-                new_gen[size++].crossFunctions(new_gen[size++], arbitraryCrossings);
-            }
+        GenetixFunction[] newGeneration = new GenetixFunction[new_len];
+        int i = 0;
+        while ( i < new_len ) {
+            //if (RandomHelper.randomBoolean(crossingProbability))
+            //{
+                int rnd1 = 1 + RandomHelper.ascRandomInt(len-1);
+                int rnd2 = RandomHelper.ascRandomInt(len);
+                if ( rnd1 < rnd2 ) rnd1 = rnd2;
+                rnd2 = RandomHelper.randomInt(rnd1);
+                newGeneration[i] = (GenetixFunction) currentGeneration[rnd1].clone();
+                newGeneration[i+1] = (GenetixFunction) currentGeneration[rnd2].clone();
+                newGeneration[i].crossFunctions(newGeneration[i+1], arbitraryCrossings);
+                i += 2;
+            //}
+        }
             
-        validate(new_gen);
+        computeFitness(newGeneration);
         len = len + new_len;
         GenetixFunction[] all_gen = new GenetixFunction[len];
-        len = gen.length;
-        System.arraycopy(gen, 0, all_gen, 0, len);
-        System.arraycopy(new_gen, 0, all_gen, len, new_len);
-        gen = new_gen;
+        len = currentGeneration.length;
+        System.arraycopy(currentGeneration, 0, all_gen, 0, len);
+        System.arraycopy(newGeneration, 0, all_gen, len, new_len);
+        setCurrentGeneration(newGeneration);
     }
 
     /**
      * This causes to save the current generation of functions (including the fitness values).
      * GenFile object is used for saving to a file.
-     *
-     */     
-    
-    protected synchronized void saveGeneration()
-    {
-        try
-        {
-            genFile.write("GENERATION"+genCounter);
-            genFile.write(gen);
-        }
-        catch (java.io.IOException e)
-        {
-            e.printStackTrace();
+     */
+    public void saveGeneration() {
+        if ( true ) return; // TODO disabled !
+        if (genFile == null) throw new IllegalStateException("no gen file");
+        final GenetixFunction[] currentGeneration = getCurrentGeneration();
+        for (int i=0; i<currentGeneration.length; i++) {
+            genFile.write( currentGeneration[i].getFunctionTree() );
         }
     }
 
     /**
      * This causes to print the current generation of functions (including the fitness values) 
      * on the standart output.
-     *
-     */         
-    
-    public synchronized void printGeneration()
-    {
-        System.out.println("GENERATION "+genCounter);
-        for (int i=0; i<gen.length; i++)
-            System.out.println(gen[i]);
+     * @param outStream the print stream e.g. <code>System.out</code>
+     */
+    public void printGeneration(final PrintWriter outStream) {
+        outStream.println("GENERATION " + generationCounter);
+        final GenetixFunction[] currentGeneration = getCurrentGeneration();
+        for (int i=0; i<currentGeneration.length; i++) {
+            outStream.println( currentGeneration[i].formatFunction() );
+        }
     }
-    
+
+    public void printGeneration(final PrintStream outStream) {
+        outStream.println("GENERATION " + generationCounter);
+        final GenetixFunction[] currentGeneration = getCurrentGeneration();
+        for (int i=0; i<currentGeneration.length; i++) {
+            outStream.println( currentGeneration[i].formatFunction() );
+        }
+    }
+
+    public void debugGeneration(final PrintStream outStream) {
+        outStream.println("GENERATION " + generationCounter);
+        final GenetixFunction[] currentGeneration = getCurrentGeneration();
+        for (int i=0; i<currentGeneration.length; i++) {
+            outStream.println( currentGeneration[i] );
+        }
+    }
+
     /**
      * This method adds (randomly generated) functions to the current generation,
      * the number of functions added is specified by the parameter.
      *
-     * @param add_limit The size of the set of functions added to the current generation.
+     * @param limit the size of the set of functions added to the current generation.
      */         
+    protected void addNewToGeneration(int limit) {
+        if (currentGeneration.length + limit > generationSize) {
+            limit = generationSize - currentGeneration.length;
+        }
+        GenetixFunction[] randomGeneration = generateFunctions(limit, true);
+        computeFitness(randomGeneration);
+        
+        int len = currentGeneration.length + limit;
+        GenetixFunction[] newGeneration = new GenetixFunction[len];
+        len = currentGeneration.length;
+        System.arraycopy(currentGeneration, 0, newGeneration, 0, len);
+        System.arraycopy(randomGeneration, 0, newGeneration, len, limit);
+        setCurrentGeneration(newGeneration);
+    }
 
-    protected synchronized void addNewToGeneration(int limit)
-    {
-        if (gen.length + limit > gen_size)
-            limit = gen_size - gen.length;
-        GenetixFunction[] rnd_gen = 
-            GenetixFunction.generate(limit, true);
-        validate(rnd_gen);
-        int len = gen.length + limit;
-        GenetixFunction[] new_gen = new GenetixFunction[len];
-        len = gen.length;
-        System.arraycopy(gen, 0, new_gen, 0, len);
-        System.arraycopy(rnd_gen, 0, new_gen, len, limit);
-        gen = new_gen;        
+    public strictfp boolean computeFitness(final GenetixFunction fx) {
+        // dataY and the funcY values (based on dataX)
+        double arithmeticDiff = 0;
+        for ( int j=0; j<dataX.length; j++ ) {
+            double funcYj = fx.getFunctionValue( dataX[j] );
+            if ( Double.isNaN(funcYj) ) {
+                arithmeticDiff = Double.NaN;
+                break;
+            }
+            arithmeticDiff += Math.abs(dataY[j] - funcYj);
+        }
+        return fx.setFitness( arithmeticDiff );
+        //return arithmeticDiff;
+    }
+
+    public void computeFitness(final GenetixFunction[] fxs) {
+        for (int i=0; i<fxs.length; i++) {
+            computeFitness(fxs[i]);
+        }
+    }
+
+    public GenetixFunction[] getCurrentGeneration() {
+        return this.currentGeneration;
+    }
+
+    protected GenetixFunction.Tuple getCurrentGenerationAsTuple() {
+        return new GenetixFunction.Tuple(this.currentGeneration);
+    }
+
+    protected void setCurrentGeneration(GenetixFunction[] gen) {
+        this.currentGeneration = gen;
+    }
+
+    protected void setCurrentGeneration(GenetixFunction.Tuple tuple) {
+        this.currentGeneration = tuple.snapshot();
     }
 
     /**
      * This method sets the training data. This data represents the 
      * aproximated function. 
      *
-     * @param data_x The x (real) values of the training data.
-     * @param data_y The y values (f(x) values) of the training data.
+     * @param dataX The x (real) values of the training data.
+     * @param dataY The y values (f(x) values) of the training data.
      */     
-    
-    public void setApproximatingData(float[] data_x, float[] data_y)
-    {
-        this.data_x = data_x;
-        this.data_y = data_y;
+    public void setApproximatingData(double[] dataX, double[] dataY) {
+        if (dataX == null) dataX = new double[0];
+        if (dataY == null) dataY = new double[0];
+        final int len = dataX.length;
+        if (len != dataY.length) {
+            throw new IllegalArgumentException(
+                    "dataX.length (" + dataX.length + ") != " +
+                    "dataY.length (" + dataY.length + ")");
+        }
+        double[] _dataX = new double[len];
+        double[] _dataY = new double[len];
+        for (int i=0; i<len; i++) {
+            _dataX[i] = dataX[i];
+            _dataY[i] = dataY[i];
+        }
+        this.dataX = _dataX;
+        this.dataY = _dataY;
     }
-    
+
+    public void setApproximatingData(float[] dataX, float[] dataY) {
+        if (dataX == null) dataX = new float[0];
+        if (dataY == null) dataY = new float[0];
+        final int len = dataX.length;
+        if (len != dataY.length) {
+            throw new IllegalArgumentException(
+                    "dataX.length (" + dataX.length + ") != " +
+                    "dataY.length (" + dataY.length + ")");
+        }
+        double[] _dataX = new double[len];
+        double[] _dataY = new double[len];
+        for (int i=0; i<len; i++) {
+            _dataX[i] = dataX[i];
+            _dataY[i] = dataY[i];
+        }
+        this.dataX = _dataX;
+        this.dataY = _dataY;
+    }
+
     /**
      * This method is used to receive the approximated data
      * domain (x) values. 
      *
      * @return The x (real) values of the training data.
      */     
-    
-    public float[] getApproximatingDataX()
-    {
-        return data_x;
+    public double[] getApproximatingDataX() {
+        return dataX;
     }    
 
     /**
@@ -361,175 +466,107 @@ public abstract class Genetix implements Runnable
      * @return The y (real) values of the training data.
      */     
     
-    public float[] getApproximatingDataY()
-    {
-        return data_y;
+    public double[] getApproximatingDataY() {
+        return dataY;
     }       
     
     /**
      * Returns the current value of the genetic counter.
      */     
+    public int getGenerationCounter() {
+        return generationCounter;
+    }
 
-    public int getGenerationCounter()
-    {
-        return genCounter;
+    public void resetGenerationCounter() {
+        generationCounter = 0;
     }
 
     /**
      * Returns the current size of the generation.
      */         
-    
-    public int getGenerationSize()
-    {
-        return gen_size;
+    public int getGenerationSize() {
+        return generationSize;
     }
     
     /**
      * Sets the size of the generation.
      */         
-
-    public void setGenerationSize(int size)
-    {
-        this.gen_size = size;
+    public void setGenerationSize(int size) {
+        this.generationSize = size;
     }
     
     /**
      * Sets the generation maximum (the last generation to be created).
      */         
-
-    public int getGenerationCounterLimit()
-    {
-        return maxCounter;
+    public int getGenerationLimit() {
+        return generationLimit;
     }    
     
     /**
      * Sets the generation maximum (the last generation to be created).
      */         
-
-    public void setGenerationCounterLimit(int max)
-    {
-        this.maxCounter = max;
+    public void setGenerationLimit(int max) {
+        this.generationLimit = max;
     }    
     
     /**
      * Returns the mutation probability.
      */         
-
-    public float getMutationProbability()
-    {
-        return mutation_prob;
+    public float getMutationProbability() {
+        return mutationProbability;
     }
     
     /**
      * Sets the mutation probability.
      */         
-
-    public void setMutationProbability(float prob)
-    {
-        this.mutation_prob = prob;
+    public void setMutationProbability(float prob) {
+        this.mutationProbability = prob;
     }
     
     /**
      * Returns the crossing probability.
      */         
-    
-    public float getCrossingProbability()
-    {
-        return crossing_prob;
+    public float getCrossingProbability() {
+        return crossingProbability;
     }
 
     /**
      * Sets the crossing probability.
      */             
-    
-    public void setCrossingProbability(float prob)
-    {
-        this.crossing_prob = prob;
+    public void setCrossingProbability(float prob) {
+        this.crossingProbability = prob;
     }  
     
-    /**
-     * Returns the crossing probability.
-     */         
-    
-    public boolean usesArbitraryMutations()
-    {
+    public boolean isArbitraryMutations() {
         return this.arbitraryMutations;
     }
 
-    /**
-     * Sets the crossing probability.
-     */             
-    
-    public void setArbitraryCrossings(boolean flag)
-    {
-        this.arbitraryCrossings = flag;
+    public void setArbitraryMutations(boolean flag) {
+        this.arbitraryMutations = flag;
     }
-    
-    /**
-     * Returns the crossing probability.
-     */         
-    
-    public boolean usesArbitraryCrossings()
-    {
+
+    public boolean isArbitraryCrossings() {
         return this.arbitraryCrossings;
     }
 
-    /**
-     * Sets the crossing probability.
-     */             
-    
-    public void setArbitraryMutations(boolean flag)
-    {
-        this.arbitraryMutations = flag;
-    }    
-
-    /**
-     * Sets the minimal length of functions to be created.
-     */             
-    
-    public static void setMinFunctionLength(int min_len)
-    {
-        GenetixFunction.setFunctionCodeLengthLimits(min_len, -1);
+    public void setArbitraryCrossings(boolean flag) {
+        this.arbitraryCrossings = flag;
     }
 
-    /**
-     * Sets the maximal length of functions to be created.
-     */             
-    
-    public static void setMaxFunctionLength(int max_len)
-    {
-        GenetixFunction.setFunctionCodeLengthLimits(-1, max_len);
-    }    
-    
-    /**
-     * Sets the mutation probability.
-     */             
-    
-    public static void setSymbols(char[] symbol, byte[] arity)
-    {
-        Function.setAllowedSymbols(symbol, arity);
-        byte min = arity[0];
-        byte max = arity[0];
-        for (int i=1; i<arity.length; i++)
-        {
-            if (arity[i]<min) min = arity[i];
-            else
-            if (arity[i]>max) max = arity[i];
-        }
-        if (min==1) min = 0;
-        LimitedTree.setCodeLimits(min, max);
+    private ComputedCallback computedCallback;
+
+    protected void notifyComputed() {
+        if ( computedCallback != null ) computedCallback.onComputed();
     }
 
-    /**
-     * Tests whether the computing has finished (<code>Genetix</code> is ready).
-     * 
-     */             
-    
-    public boolean hasFinishedComputing()
-    {
-        return hasFinished;
+    public void setComputedCallback(ComputedCallback computedCallback) {
+        this.computedCallback = computedCallback;
     }
-    
+
+    public static interface ComputedCallback {
+        void onComputed();
+    }
+
     /**
      * This enables <code>Genetix</code> to save all the
      * functions produced during the computation.
@@ -537,12 +574,9 @@ public abstract class Genetix implements Runnable
      * 
      * @param mode The save mode (true means saving is enabled)
      */             
-    
-    public void setSavingMode(boolean mode)
-    {
+    public void setSavingMode(boolean mode) {
         isSaving = mode;
-        if ((mode)&&(genFile==null)) 
-            genFile = new GenFile();
+        //if (isSaving && genFile==null) genFile = new GenFile();
     }    
     
     /**
@@ -553,23 +587,39 @@ public abstract class Genetix implements Runnable
      * @param size The array size of the best functions to be returned.
      */             
     
-    public String[] getBestResults(int size)
-    {
-        selectBest(size);
-        if (gen.length < size) size = gen.length;
-        
-        String[] funcs = new String[size];
-        for (int i=0; i<size; i++)
-            funcs[i] = gen[i].parseFunction();
-        
-        return funcs;
+    public GenetixFunction[] getBestFunctions(int size) {
+        //selectBest(size);
+        if (currentGeneration.length < size) size = currentGeneration.length;
+        Arrays.sort(currentGeneration);
+        final GenetixFunction[] bestFunctions = new GenetixFunction[size];
+        for (int i=0; i<size; i++) {
+            bestFunctions[i] = currentGeneration[i];
+        }
+        return bestFunctions;
     }
-    
-    public String getBestFitness()
-    {
-        if (bestFitness==Float.NaN)
-            return "not available";
-        else return String.valueOf(bestFitness);
+
+    public String[] getBestFunctionsFormatted(int size) {
+        final GenetixFunction[] bestFunctions = getBestFunctions(size);
+        final String[] formatted = new String[bestFunctions.length];
+        for (int i=0; i<size; i++) {
+            formatted[i] = bestFunctions[i].formatFunction();
+        }
+        return formatted;
     }
-    
+
+    public double getBestFitness() {
+        if ( bestFitness==Float.NaN ) {
+            throw new IllegalStateException("not available");
+        }
+        return bestFitness;
+    }
+
+    /**
+     * Method used to get a statistical report over the total instances created.
+     * @return the instance counter
+     */
+    public long getFunctionsCreated() {
+        return instancesCreated;
+    }
+
 }

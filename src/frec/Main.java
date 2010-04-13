@@ -1,26 +1,26 @@
 
 package frec;
 
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.*;
 import frec.gui.*;
 import frec.core.*;
-import frec.jcm.draw.DrawGraph;
+import frec.jcm.draw.*;
+import java.awt.Dimension;
+import java.awt.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import javax.swing.*;
 
-public final class Main extends JApplet implements Runnable
-{
+public class Main extends JApplet implements Runnable {
     /*
-    static 
-    { 
+    static {
         JFrame.setDefaultLookAndFeelDecorated(true); 
         JDialog.setDefaultLookAndFeelDecorated(true);
     }
     */
+
+    private static final String VERSION = "1.6";
+    private static final String APP_NAME = "F-ReC " + VERSION;
     
-    private static String versionName = "F-ReC 1.5";
-    
-    private Genetix genetix;
     private GenetixSetting setting;
     private InputGraphPanel input;
     private OutputGraphPanel output;
@@ -30,78 +30,88 @@ public final class Main extends JApplet implements Runnable
     private GenetixProgress progress;
     private boolean savingEnabled;
 
-    public void init()
-    {
-        input = new InputGraphPanel();
-        input.init();
+    public void init() {
+        input = new InputGraphPanel() {
+
+            public void storeData() {
+                super.storeData();
+                inputDataSet();
+            }
+            
+        };
+
         setting = new GenetixSetting();
-        set = new JFrame(versionName);
+        setting.setReadyListener(new ActionListener() {
+
+            public void actionPerformed(ActionEvent e) {
+                settingsReady();
+            }
+            
+        });
+
+        set = new JFrame(APP_NAME);
         set.getContentPane().add(setting);
         set.setResizable(false);
-        gui = new JFrame(versionName);
+        
+        gui = new JFrame(APP_NAME);
         gui.getContentPane().add(input);
         gui.setResizable(true);
-        //gui.setJMenuBar(new MenuBar());
-        set.pack();
-        set.show();        
         dialog = new JDialog(gui, "Please Wait ...");        
     }
 
-    public void start()
-    {
-        while (!setting.isReady())
-        {
-            try{ Thread.sleep(500); }
-            catch (InterruptedException e)
-            { System.out.println("Main - interrupted : " + e.getMessage()); }
+    public void start() {
+        SwingUtilities.invokeLater(this);
+    }
+
+    void enableSaving() {
+        savingEnabled = true;
+    }
+
+    void enableClose() {
+        gui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        set.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    }
+
+    private Genetix genetix;
+
+    private void settingsReady() {
+        try {
+            genetix = (Genetix) setting.getSelModelClass().newInstance();
         }
- 
-        String genx = setting.getGenModel();
-        if (genx.equals("GPModelGenetix"))
-        {
-            genetix = new GPModelGenetix();
-            ((GPModelGenetix)genetix).setReproductProbability(setting.getGenReproductProb());
-            ((GPModelGenetix)genetix).setSelectionProbability(setting.getGenSelectionProb());                
+        catch (InstantiationException ex) {
+            throw new RuntimeException(ex);
         }
-        else
-        if (genx.equals("MyModelGenetix"))
-        {
-            genetix = new MyModelGenetix();
-            ((MyModelGenetix)genetix).setReproductProbability(setting.getGenReproductProb());
-            ((MyModelGenetix)genetix).setSelectionProbability(setting.getGenSelectionProb());                
-        }        
-        else genetix = new GAModelGenetix();
-          
-        input.setDataSize(setting.getDataSize());
-            
+        catch (IllegalAccessException ex) {
+            throw new RuntimeException(ex);
+        }
+
+        if (genetix instanceof GPModelGenetix) {
+            ((GPModelGenetix) genetix).setReproductProbability(setting.getGenReproductProb());
+            ((GPModelGenetix) genetix).setSelectionProbability(setting.getGenSelectionProb());
+        }
         genetix.setSavingMode(savingEnabled);
         genetix.setGenerationSize(setting.getGenSize());
-        genetix.setGenerationCounterLimit(setting.getGenMax());
+        genetix.setGenerationLimit(setting.getGenMax());
         genetix.setMutationProbability(setting.getGenMutationProb());
         genetix.setCrossingProbability(setting.getGenCrossingProb());
         genetix.setArbitraryMutations(setting.getArbitraryMutationsUsage());
         genetix.setArbitraryCrossings(setting.getArbitraryCrossingsUsage());
-            
-        setting = null;
+        input.setDataSize(setting.getDataSize());
+
         set.dispose();
         gui.pack();
-        gui.show();
-        set = null;
-        
-        while (!input.hasData())
-        {
-            try{ Thread.sleep(500); }
-            catch (InterruptedException e)
-            { System.out.println("Main - interrupted : " + e.getMessage()); }
-        }
-        
-        float[] x = input.datax;
-        float[] y = input.datay;
+        gui.setVisible(true);
+        /* inputDataSet() */
+    }
 
-        progress = new GenetixProgress(genetix);
+    private void inputDataSet() {
+        final float[] x = input.getDataX();
+        final float[] y = input.getDataY();
+
+        progress = new GenetixProgress(genetix.getGenerationLimit());
         progress.setOpaque(true);
+        
         dialog.setContentPane(progress);
-        dialog.pack();
         Point p = gui.getLocationOnScreen();
         Dimension d1 = gui.getSize();
         dialog.setSize(300, 400);
@@ -109,58 +119,53 @@ public final class Main extends JApplet implements Runnable
         int xloc = p.x + (d1.width - d2.width) / 2;
         int yloc = p.y + (d1.height - d2.height) / 2;
         dialog.setLocation(xloc,yloc);
-        dialog.show();                
-        progress.start();
-            
-        genetix.setApproximatingData(x,y);
-        new Thread(genetix).start();
-            
-        graph = input.getDrawGraph();
-        input.setEnabled(false);             
+        dialog.pack();
+        dialog.setVisible(true);
 
-        while (!genetix.hasFinishedComputing())
-        {
-            try{ Thread.sleep(1000); }
-            catch (InterruptedException e)
-            { System.out.println("Main - interrupted : " + e.getMessage()); }
-        }
-          
+        genetix.setApproximatingData(x, y);
+
+        graph = input.getDrawGraph();
+        input.setEnabled(false);
+
+        genetix.setComputedCallback(new Genetix.ComputedCallback() {
+
+            public void onComputed() {
+                SwingUtilities.invokeLater(new Runnable() {
+                    public void run() { showResults(); }
+                });
+            }
+
+        });
+        progress.start(genetix); // starts genetix computation
+        /*showResults()*/
+    }
+
+    private void showResults() {
         dialog.setVisible(false);
-        dialog.dispose();
+        //dialog.dispose();
         dialog = null;
         progress = null;
-            
-        String[] funcs = genetix.getBestResults(genetix.getGenerationSize() / 2);
+
+        final int size = genetix.getGenerationSize() / 2;
+        String[] funcs = genetix.getBestFunctionsFormatted(size);
         output = new OutputGraphPanel(funcs);
-        output.init(graph);
+        output.addDrawGraph(graph);
         output.setAxisLimits(input.getAxisLimits());
 
         gui.getContentPane().remove(input);
         gui.getContentPane().add(output);
-        input = null;
         gui.pack();
-        gui.show();
+        gui.setVisible(true);
         output.repaint();
     }
 
-    public void enableSaving()
-    {
-        savingEnabled = true;
-    }
-
-    public void enableClose()
-    {
-        gui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        set.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    }
-
-    public void run()
-    {
-        SwingUtilities.invokeLater(this);
+    public void run() {
+        set.pack();
+        set.setVisible(true);
+        /*settingsReady()*/
     }
     
-    public static void main(String [] args)
-    {          
+    public static void main(String[] args) {
         Main main = new Main();
         main.init();
         main.enableSaving();
@@ -168,7 +173,8 @@ public final class Main extends JApplet implements Runnable
         main.start();
     }    
 
-    protected class MenuBar extends JMenuBar
+    /*
+    private static class MenuBar extends JMenuBar
     {
         private JMenu menu;
         private JMenuItem menuItem;
@@ -253,4 +259,6 @@ public final class Main extends JApplet implements Runnable
             this.add(menu);          
         }
     }
+    */
+    
 }

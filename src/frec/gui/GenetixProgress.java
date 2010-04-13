@@ -1,69 +1,36 @@
 
 package frec.gui;
 
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.BorderLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import javax.swing.*;
 import frec.core.*;
+import java.awt.Toolkit;
 
 public class GenetixProgress extends JPanel
-    implements ActionListener
 {
     private final static int CHECK_TIME = 500;
-    private final static String newline = "\n";
     private final static String ginfo = "Generation: ";
     private final static String finfo = "Functions created: ";
     private final static String binfo = "Best fitness: ";
     private static String minfo;
     
     private JProgressBar progress;
-    private Timer timer;
-    private Genetix task = null;
     private JTextArea output;
     private JButton cancel;
     
     private boolean canceled = false;
-    
-    private ActionListener timerAction = new ActionListener()    
-    {
-            public void actionPerformed(ActionEvent evt) 
-            {
-                if (task != null)
-                {
-                    int counter = task.getGenerationCounter();
-                    progress.setValue(counter);
-                
-                    if (progress.isIndeterminate()) 
-                    {
-                        progress.setIndeterminate(false);
-                        progress.setString(null); //display % string
-                    }
-                
-                    output.append(ginfo + counter + minfo + newline);
-                    output.append(finfo + GenetixFunction.getFunctionsCreated() + newline);
-                    output.append(binfo + task.getBestFitness() + newline);
-                    counter = output.getDocument().getLength();
-                    output.setCaretPosition(counter);
-                    
-                    if (task.hasFinishedComputing()) 
-                    {
-                        Toolkit.getDefaultToolkit().beep();
-                        timer.stop();
-                        //progressBar.setValue(progressBar.getMinimum());
-                        progress.setString(""); //hide % string
-                    }
-                }
-            }
-        };
 
-    public GenetixProgress(Genetix task) 
+    public GenetixProgress(final int maxProgress)
     {
         super(new BorderLayout());
-        this.task = task;
-        int max = task.getGenerationCounterLimit();
-        minfo = " of " + max;
+        //this.task = genetix;
+        //int max = genetix.getGenerationLimit();
+        minfo = " of " + maxProgress;
 
-        progress = new JProgressBar(0, max);
+        progress = new JProgressBar(0, maxProgress);
         progress.setValue(0);
 
         progress.setStringPainted(true); //get space for the string
@@ -74,6 +41,14 @@ public class GenetixProgress extends JPanel
         output.setEditable(false);
         
         cancel = new JButton("Cancel");
+        cancel.addActionListener(new ActionListener()
+        {
+            public void actionPerformed(ActionEvent e) {
+                cancel.setEnabled(false);
+                canceled = true;
+                cancel();
+            }
+        });
 
         JPanel panel1 = new JPanel();
         panel1.add(new JLabel(" Progress: "));
@@ -86,42 +61,81 @@ public class GenetixProgress extends JPanel
         add(new JScrollPane(output), BorderLayout.CENTER);
         add(panel2, BorderLayout.PAGE_END);
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-
-        timer = new Timer(CHECK_TIME, timerAction);
-    }
-    
-    /**
-     * Called when the user presses the start button.
-     */
-    public void actionPerformed(ActionEvent evt) 
-    {
-        if (evt.getSource().equals(cancel))
-        {
-            cancel.setEnabled(false);
-            timer.stop();
-            canceled = true;
-        }
-    }    
+    } 
     
     public boolean isCanceled()
     {
         return canceled;
     }
-    
-    public void start() //throws
-        //java.lang.InterruptedException,
-        //java.lang.reflect.InvocationTargetException
+
+    //
+
+    public void updateProgress(final Genetix genetix)
     {
-        try{
-        SwingUtilities.invokeAndWait(new Runnable()
+        int counter = genetix.getGenerationCounter();
+        progress.setValue(counter);
+        if (progress.isIndeterminate())
         {
-            public void run() 
-            { 
-                timer.restart(); 
-                progress.setIndeterminate(true);
+            progress.setIndeterminate(false);
+            progress.setString(null); //display % string
+        }
+
+        output.append(ginfo + counter + minfo + "\n");
+        output.append(finfo + genetix.getFunctionsCreated() + "\n");
+        output.append(binfo + genetix.getBestFitness() + "\n");
+
+        counter = output.getDocument().getLength();
+        output.setCaretPosition(counter);
+    }
+
+    public void finishProgress(final Genetix genetix)
+    {
+        updateProgress(genetix);
+        Toolkit.getDefaultToolkit().beep();
+        //progressBar.setValue(progressBar.getMinimum());
+        progress.setString(""); //hide % string
+    }
+
+    private void cancel()
+    {
+        if (timer != null) timer.stop();
+        if (worker != null) worker.interrupt();
+    }
+
+    private Timer timer;
+    private SwingWorker worker;
+
+    public void start(final Genetix genetix)
+    {
+        timer = new Timer(CHECK_TIME, new ActionListener()
+        {
+            public void actionPerformed(ActionEvent e)
+            {
+                updateProgress(genetix);
             }
         });
-        } catch (Exception e){ e.printStackTrace(); }
+        worker = new SwingWorker()
+        {
+            public Object work()
+            {
+                genetix.run();
+                return null;
+            }
+
+            public void interrupt() {
+                genetix.stopCompute();
+                super.interrupt();
+            }
+
+            public void finished()
+            {
+                timer.stop();
+                finishProgress(genetix);
+            }
+
+        };
+        timer.start();
+        worker.start();
     }
     
 }

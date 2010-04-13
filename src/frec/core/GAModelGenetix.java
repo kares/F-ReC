@@ -7,9 +7,31 @@ package frec.core;
  * optimalization for the purposes of the F-ReC project. For more effectivity it
  * is advised to overrride this class (at least its <code>run()</code>
  * method).
+ *
+ * The <code>compute()</code> behaviour is the following:
+ * <ul>
+ * <li> <code> generationSize = 100; </code>
+ * <li> <code> init(2, 6); </code>
+ * <li> <code> check(); </code>
+ * <li>
+ * <code> while (currentGeneration.length < generationSize) { add(generationSize - currentGeneration.length); check(); } </code>
+ * <li> <code> select(50); </code>
+ * <li> <code> generationSize = 50; </code>
+ * <li> <code> while (generationCounter < generationLimit) { </code>
+ * <ul>
+ * <li> <code> if (save) saveGen(); </code>
+ * <li> <code> mutate(); </code>
+ * <li> <code> select(35); </code>
+ * <li> <code> cross(); </code>
+ * <li> <code> add(20); </code>
+ * <li> <code> check(); </code>
+ * <li> <code> generationCounter++; </code>
+ * </ul>
+ * <li> <code> } </code>
+ * </ul>
  */
-
 public class GAModelGenetix extends Genetix {
+    
     /**
      * Creates a new <code>Genetix</code> object that will work over the
      * default symbol set. The symbol set will be set for the
@@ -17,7 +39,6 @@ public class GAModelGenetix extends Genetix {
      * the following functions (function symbols):
      * <code> x+y, x-y, x*y, x/y, x^2, x^3, e^x, abs(x), sqrt(x), ln(x), log(x), min(x,y), max(x,y), sin(x), cos(x), tan(x), asin(x), acos(x), atan(x) </code>
      */
-
     public GAModelGenetix() {
         super();
     }
@@ -32,101 +53,39 @@ public class GAModelGenetix extends Genetix {
      * @param arity
      *            Arity of the provided symbols.
      */
-
+    /*
     public GAModelGenetix(char[] symbol, byte[] arity) {
         super();
         setSymbols(symbol, arity);
     }
+    */
 
-    /**
-     * This method causes this object (as a <code>Thread</code>) to start
-     * execution. The default behaviour is the following:
-     * <ul>
-     * <li> <code> gen_size = 100; </code>
-     * <li> <code> init(2, 6); </code>
-     * <li> <code> check(); </code>
-     * <li>
-     * <code> while (gen.length < gen_size) { add(gen_size - gen.length); check(); } </code>
-     * <li> <code> select(50); </code>
-     * <li> <code> gen_size = 50; </code>
-     * <li> <code> while (genCounter < maxCounter) { </code>
-     * <ul>
-     * <li> <code> if (save) saveGen(); </code>
-     * <li> <code> mutate(); </code>
-     * <li> <code> select(35); </code>
-     * <li> <code> cross(); </code>
-     * <li> <code> add(20); </code>
-     * <li> <code> check(); </code>
-     * <li> <code> genCounter++; </code>
-     * </ul>
-     * <li> <code> } </code>
-     * </ul>
-     */
-
-    public void run() {
-        gen_size *= 2;
+    protected void computeInit() {
+        int generationSize = getGenerationSize();
+        generationSize *= 2;
         initializeGeneration();
-        // System.out.println("inited:");
-        // printGeneration();
         checkFitnessErrors();
-        // System.out.println("checkedf:");
-        // printGeneration();
-        while (gen.length < gen_size) {
-            // System.out.println("GOING TO ADD len="+gen.length);
-            addNewToGeneration(gen_size - gen.length);
-            // System.out.println("ADDED len="+gen.length);
+        while (getCurrentGeneration().length < generationSize) {
+            final int len = getCurrentGeneration().length;
+            addNewToGeneration(generationSize - len);
             checkFitnessErrors();
-            // System.out.println("FCHECK len="+gen.length);
-            // checkPopulationErrors();
-            // System.out.println("PCHECK len="+gen.length);
         }
-        // System.out.println("added&checked:");
-        // printGeneration();
-        gen_size /= 2;
-        selectBest(gen_size);
-        // System.out.println("selected:");
-        // printGeneration();
-        if (isSaving)
-            while (genCounter < maxCounter) {
-                saveGeneration();
-                mutateGeneration();
-                // System.out.println("_mutated:");
-                // printGeneration();
-                selectBest(3 * gen_size / 4);
-                // System.out.println("_selected:");
-                // printGeneration();
-                crossGeneration();
-                // System.out.println("_crossed:");
-                // printGeneration();
-                checkFitnessErrors();
-                // System.out.println("_checkedf:");
-                // printGeneration();
-                checkPopulationErrors();
-                // System.out.println("_checkedg:");
-                // printGeneration();
-                selectBest(gen_size);
-                // System.out.println("_selected:");
-                // printGeneration();
-                addNewToGeneration(gen_size - gen.length);
-                // System.out.println("_added:");
-                // printGeneration();
-                checkFitnessErrors();
-                genCounter++;
-            }
-        else
-            while (genCounter < maxCounter) {
-                mutateGeneration();
-                selectBest(3 * gen_size / 4);
-                crossGeneration();
-                checkFitnessErrors();
-                checkPopulationErrors();
-                selectBest(gen_size);
-                addNewToGeneration(gen_size - gen.length);
-                checkFitnessErrors();
-                genCounter++;
-            }
 
-        hasFinished = true;
+        generationSize /= 2;
+        selectBest(generationSize);
+    }
+
+    protected void computeNext() {
+        int generationSize = getGenerationSize();
+        mutateGeneration();
+        selectBest(3 * generationSize / 4);
+        crossGeneration();
+        checkFitnessErrors();
+        checkPopulationErrors();
+        selectBest(generationSize);
+        final int len = getCurrentGeneration().length;
+        addNewToGeneration(generationSize - len);
+        checkFitnessErrors();
     }
 
 }

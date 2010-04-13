@@ -4,19 +4,17 @@ package frec.util;
 import java.util.*;
 import frec.core.GenetixFunction;
 
-public final class GenList extends AbstractCollection
+class GenList extends AbstractCollection
 {
     private GenetixFunction[] elems; 
     private int size;
-    private int inc;
-    private int init;
+    private int inc = 10;
+    private int init = 16;
     
     public GenList() 
     {
-        elems = new GenetixFunction[10];
-        init = 10;
+        elems = new GenetixFunction[init];
         size = 0;
-        inc = 5;
     }
     
     public GenList(int initialCapacity, int increment) 
