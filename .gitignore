@@ -1,7 +1,9 @@
 bin
 build
+dist
 nbproject
 .classpath
 .project
 .settings
 .tmp
+jcm-src

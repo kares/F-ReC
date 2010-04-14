@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+		F-ReC - Function ReCognition
+		
+		ant compile       - compiles the sources
+		ant compile-core  - compiles the "core" source only (no GUI)
+		ant jar           - creates an executable java jar from the compiled classes
+		ant jar-core      - creates a jar from the "core" classes only
+		ant run (default) - runs the application (from the build jar)
+-->
+<project name="F-ReC" default="run" basedir=".">
+
+    <description>Builds and runs the project F-ReC.</description>
+	
+		<target name="clean">
+				<delete dir="build"/>
+		</target>
+
+		<target name="compile-core">
+		    <mkdir dir="build/classes-core"/>
+		    <javac srcdir="src" destdir="build/classes-core">
+						<include name="frec/core/**"/>
+						<include name="frec/util/**"/>
+				</javac>
+		</target>
+	
+		<target name="compile-full">
+		    <mkdir dir="build/classes"/>
+		    <javac srcdir="src" destdir="build/classes"/>
+		</target>
+
+		<target name="compile">
+				<antcall target="compile-full"/>
+		</target>
+	
+		<target name="jar-core" depends="compile-core">
+		    <mkdir dir="build/jar"/>
+		    <jar destfile="build/jar/F-ReC-core.jar" basedir="build/classes-core">
+		    </jar>
+		</target>
+	
+		<target name="jar-full" depends="compile">
+		    <mkdir dir="build/jar"/>
+		    <jar destfile="build/jar/F-ReC.jar" basedir="build/classes">
+		        <manifest>
+		            <attribute name="Main-Class" value="frec.Main"/>
+		        </manifest>
+		    </jar>
+		</target>
+	
+		<target name="jar">
+				<antcall target="jar-full"/>
+		</target>
+	
+		<target name="run" depends="jar">
+		    <java jar="build/jar/F-ReC.jar" fork="true"/>
+		</target>
+	
+</project>
