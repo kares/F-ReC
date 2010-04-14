@@ -9,24 +9,27 @@
 		ant run (default) - runs the application (from the build jar)
 -->
 <project name="F-ReC" default="run" basedir=".">
-
+		<property name="build_dir" value="build"/>
+		<property name="jar_name" value="F-ReC"/>
+		<property name="jar_dir" value="${build_dir}/jar"/>
+	
     <description>Builds and runs the project F-ReC.</description>
 	
 		<target name="clean">
-				<delete dir="build"/>
+				<delete dir="${build_dir}"/>
 		</target>
 
 		<target name="compile-core">
-		    <mkdir dir="build/classes-core"/>
-		    <javac srcdir="src" destdir="build/classes-core">
-						<include name="frec/core/**"/>
-						<include name="frec/util/**"/>
+		    <mkdir dir="${build_dir}/classes-core"/>
+		    <javac srcdir="src" destdir="${build_dir}/classes-core" debug="true">
+						<include name="org/kares/math/frec/core/**"/>
+						<include name="org/kares/math/frec/util/**"/>
 				</javac>
 		</target>
 	
 		<target name="compile-full">
-		    <mkdir dir="build/classes"/>
-		    <javac srcdir="src" destdir="build/classes"/>
+		    <mkdir dir="${build_dir}/classes"/>
+		    <javac srcdir="src" destdir="${build_dir}/classes" debug="true"/>
 		</target>
 
 		<target name="compile">
@@ -34,16 +37,16 @@
 		</target>
 	
 		<target name="jar-core" depends="compile-core">
-		    <mkdir dir="build/jar"/>
-		    <jar destfile="build/jar/F-ReC-core.jar" basedir="build/classes-core">
+		    <mkdir dir="${jar_dir}"/>
+		    <jar destfile="${jar_dir}/${jar_name}-core.jar" basedir="${build_dir}/classes-core">
 		    </jar>
 		</target>
 	
 		<target name="jar-full" depends="compile">
-		    <mkdir dir="build/jar"/>
-		    <jar destfile="build/jar/F-ReC.jar" basedir="build/classes">
+		    <mkdir dir="${jar_dir}"/>
+		    <jar destfile="${jar_dir}/${jar_name}.jar" basedir="${build_dir}/classes">
 		        <manifest>
-		            <attribute name="Main-Class" value="frec.Main"/>
+		            <attribute name="Main-Class" value="org.kares.math.frec.Main"/>
 		        </manifest>
 		    </jar>
 		</target>
@@ -53,7 +56,7 @@
 		</target>
 	
 		<target name="run" depends="jar">
-		    <java jar="build/jar/F-ReC.jar" fork="true"/>
+		    <java jar="${jar_dir}/${jar_name}.jar" fork="true"/>
 		</target>
 	
 </project>
