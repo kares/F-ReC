@@ -14,6 +14,7 @@ import java.util.Map;
  * used in a that expression are assigned to the lovest level vertices and the
  * other vertices correspond to the basic operations used in the expression.
  */
+@SuppressWarnings("serial")
 public class FunctionTree extends LimitedTree {
 
     //private static Function[] allowedFunctions;

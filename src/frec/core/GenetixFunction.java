@@ -22,7 +22,7 @@ public class GenetixFunction implements Comparable, Cloneable {
             Functions.Sub.INSTANCE,
             Functions.Mul.INSTANCE,
             Functions.Div.INSTANCE,
-            // NOTE: mod is not supported by JCM !
+            // NOTE: % seems not supported by JCM !
             //Functions.Mod.INSTANCE,
             Functions.Pow.INSTANCE,
             Functions.Sin.INSTANCE,
@@ -45,10 +45,12 @@ public class GenetixFunction implements Comparable, Cloneable {
             Functions.Floor.INSTANCE,
             Functions.Ceil.INSTANCE,
             Functions.Cbrt.INSTANCE,
-            Functions.Fact.INSTANCE,
+            // NOTE: somehow not working in JCM !
+            //Functions.Fact.INSTANCE,
             Functions.Neg.INSTANCE,
-            Functions.Min.INSTANCE,
-            Functions.Max.INSTANCE,
+            // NOTE: <, > not supported by JCM !
+            //Functions.Min.INSTANCE,
+            //Functions.Max.INSTANCE,
         };
         FunctionTree.setAllowedFunctions(defaultFunctions);
     }
@@ -221,7 +223,7 @@ public class GenetixFunction implements Comparable, Cloneable {
         if (fitness == NAN) fit = "invalid";
         
         final StringBuffer str = new StringBuffer();
-        str.append("GenetixFunction: ");
+        str.append("GenetixFunction:");
         str.append(" [fitness = ").append(fit).append("] ");
         str.append(function.format());
         return str.toString();

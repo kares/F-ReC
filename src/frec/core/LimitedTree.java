@@ -14,6 +14,7 @@ import java.util.Random;
  * limited, but the computation is correct only when assuming that
  * the code element = vertex degree in a (tree) graph is in [0,9].
  */
+@SuppressWarnings("serial")
 public class LimitedTree extends ReadsTree {
     
     private static int codeElementMin = 0; // downer limit [1..codeElementMax]

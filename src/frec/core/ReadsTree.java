@@ -16,6 +16,7 @@ import java.util.Random;
  *
  * @see TreeGraph#forReadsCode(java.lang.String) 
  */
+@SuppressWarnings("serial")
 public class ReadsTree implements java.io.Serializable, Cloneable {
 
     private static int maxRandomCodeLength = 10;

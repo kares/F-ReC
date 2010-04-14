@@ -256,6 +256,9 @@ public class OutputGraphPanel extends JCMPanel {
 
     public void addDrawGraph(DrawGraph drawGraph) {
         canvas.add(drawGraph);
-        //drawGraph.setCoords(canvas.getCoordinateRect());
+        if (drawGraph != null) {
+            drawGraph.setCoords(canvas.getCoordinateRect());
+        }
     }
+    
 } // end class SimpleGraph

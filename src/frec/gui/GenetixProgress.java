@@ -1,103 +1,94 @@
 
 package frec.gui;
 
+import frec.core.*;
+
 import java.awt.BorderLayout;
 import java.awt.Insets;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.*;
-import frec.core.*;
-import java.awt.Toolkit;
 
-public class GenetixProgress extends JPanel
-{
+public class GenetixProgress extends JPanel {
+	
     private final static int CHECK_TIME = 500;
-    private final static String ginfo = "Generation: ";
-    private final static String finfo = "Functions created: ";
-    private final static String binfo = "Best fitness: ";
-    private static String minfo;
     
-    private JProgressBar progress;
-    private JTextArea output;
-    private JButton cancel;
+    private final int maxProgress;
+    private final JProgressBar progressBar;
+    private final JTextArea outputArea;
+    private final JButton cancelButton;
     
     private boolean canceled = false;
 
-    public GenetixProgress(final int maxProgress)
-    {
+    public GenetixProgress(final int maxProgress) {
         super(new BorderLayout());
-        //this.task = genetix;
-        //int max = genetix.getGenerationLimit();
-        minfo = " of " + maxProgress;
-
-        progress = new JProgressBar(0, maxProgress);
-        progress.setValue(0);
-
-        progress.setStringPainted(true); //get space for the string
-        progress.setString("");          //but don't paint it
-
-        output = new JTextArea(5, 20);
-        output.setMargin(new Insets(3 ,3 ,3 ,3 ));
-        output.setEditable(false);
         
-        cancel = new JButton("Cancel");
-        cancel.addActionListener(new ActionListener()
-        {
+        this.maxProgress = maxProgress;
+        progressBar = new JProgressBar(0, maxProgress);
+        progressBar.setValue(0);
+
+        progressBar.setStringPainted(true); //get space for the string
+        progressBar.setString("");          //but don't paint it
+
+        outputArea = new JTextArea(5, 20);
+        outputArea.setMargin(new Insets(3, 3, 3, 3));
+        outputArea.setEditable(false);
+        
+        cancelButton = new JButton("Cancel");
+        cancelButton.addActionListener(new ActionListener() {
+        	
             public void actionPerformed(ActionEvent e) {
-                cancel.setEnabled(false);
+                cancelButton.setEnabled(false);
                 canceled = true;
                 cancel();
             }
+            
         });
 
         JPanel panel1 = new JPanel();
         panel1.add(new JLabel(" Progress: "));
-        panel1.add(progress);
+        panel1.add(progressBar);
         
         JPanel panel2 = new JPanel();
-        panel2.add(cancel);        
+        panel2.add(cancelButton);        
 
         add(panel1, BorderLayout.PAGE_START);
-        add(new JScrollPane(output), BorderLayout.CENTER);
+        add(new JScrollPane(outputArea), BorderLayout.CENTER);
         add(panel2, BorderLayout.PAGE_END);
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
     } 
     
-    public boolean isCanceled()
-    {
+    public boolean isCanceled() {
         return canceled;
     }
 
     //
 
-    public void updateProgress(final Genetix genetix)
-    {
+    public void updateProgress(final Genetix genetix) {
         int counter = genetix.getGenerationCounter();
-        progress.setValue(counter);
-        if (progress.isIndeterminate())
-        {
-            progress.setIndeterminate(false);
-            progress.setString(null); //display % string
+        progressBar.setValue(counter);
+        if (progressBar.isIndeterminate()) {
+            progressBar.setIndeterminate(false);
+            progressBar.setString(null); //display % string
         }
+        
+        outputArea.append("Generation: " + counter + " of " + maxProgress + "\n");
+        outputArea.append("Functions created: " + genetix.getFunctionsCreated() + "\n");
+        outputArea.append("Best fitness: " + genetix.getBestFitness() + "\n");
 
-        output.append(ginfo + counter + minfo + "\n");
-        output.append(finfo + genetix.getFunctionsCreated() + "\n");
-        output.append(binfo + genetix.getBestFitness() + "\n");
-
-        counter = output.getDocument().getLength();
-        output.setCaretPosition(counter);
+        counter = outputArea.getDocument().getLength();
+        outputArea.setCaretPosition(counter);
     }
 
-    public void finishProgress(final Genetix genetix)
-    {
+    public void finishProgress(final Genetix genetix) {
         updateProgress(genetix);
         Toolkit.getDefaultToolkit().beep();
         //progressBar.setValue(progressBar.getMinimum());
-        progress.setString(""); //hide % string
+        progressBar.setString(""); //hide % string
     }
 
-    private void cancel()
-    {
+    private void cancel() {
         if (timer != null) timer.stop();
         if (worker != null) worker.interrupt();
     }
@@ -105,19 +96,17 @@ public class GenetixProgress extends JPanel
     private Timer timer;
     private SwingWorker worker;
 
-    public void start(final Genetix genetix)
-    {
-        timer = new Timer(CHECK_TIME, new ActionListener()
-        {
-            public void actionPerformed(ActionEvent e)
-            {
+    public void start(final Genetix genetix) {
+        timer = new Timer(CHECK_TIME, new ActionListener() {
+        	
+            public void actionPerformed(ActionEvent e) {
                 updateProgress(genetix);
             }
+            
         });
-        worker = new SwingWorker()
-        {
-            public Object work()
-            {
+        worker = new SwingWorker() {
+        	
+            public Object work() {
                 genetix.run();
                 return null;
             }
@@ -127,8 +116,7 @@ public class GenetixProgress extends JPanel
                 super.interrupt();
             }
 
-            public void finished()
-            {
+            public void finished() {
                 timer.stop();
                 finishProgress(genetix);
             }

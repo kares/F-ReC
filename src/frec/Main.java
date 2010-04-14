@@ -23,8 +23,8 @@ public class Main extends JApplet implements Runnable {
     static final String APP_NAME = "F-ReC " + VERSION;
     
     private GenetixSettings settings;
-    private InputGraphPanel input;
-    private OutputGraphPanel output;
+    private InputGraphPanel inputPanel;
+    private OutputGraphPanel outputPanel;
     private DrawGraph graph;
     private JFrame appFrame;
     private JDialog settingsDialog;
@@ -32,7 +32,7 @@ public class Main extends JApplet implements Runnable {
     private boolean savingEnabled;
 
     public void init() {
-        input = new InputGraphPanel() {
+        inputPanel = new InputGraphPanel() {
 
             public void storeData() {
                 super.storeData();
@@ -41,7 +41,7 @@ public class Main extends JApplet implements Runnable {
             
         };
         appFrame = new JFrame(APP_NAME);
-        appFrame.getContentPane().add(input);
+        appFrame.getContentPane().add(inputPanel);
         appFrame.setResizable(true);
         appFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
@@ -113,7 +113,7 @@ public class Main extends JApplet implements Runnable {
         genetix.setCrossingProbability(settings.getGenCrossingProbability());
         genetix.setArbitraryMutations(settings.isArbitraryMutations());
         genetix.setArbitraryCrossings(settings.isArbitraryCrossings());
-        input.setDataSize(settings.getDataSize());
+        inputPanel.setDataSize(settings.getDataSize());
 
         //appFrame.pack();
         //appFrame.setVisible(true);
@@ -121,8 +121,8 @@ public class Main extends JApplet implements Runnable {
     }
 
     private void inputDataSet() {
-        final float[] x = input.getDataX();
-        final float[] y = input.getDataY();
+        final float[] x = inputPanel.getDataX();
+        final float[] y = inputPanel.getDataY();
 
         GenetixProgress progress = new GenetixProgress(genetix.getGenerationLimit());
         progress.setOpaque(true);
@@ -136,8 +136,8 @@ public class Main extends JApplet implements Runnable {
 
         genetix.setApproximatingData(x, y);
 
-        graph = input.getDrawGraph();
-        input.setEnabled(false);
+        graph = inputPanel.getDrawGraph();
+        inputPanel.setEnabled(false);
 
         genetix.setComputedCallback(new Genetix.ComputedCallback() {
 
@@ -169,15 +169,15 @@ public class Main extends JApplet implements Runnable {
 
         final int size = genetix.getGenerationSize() / 2;
         String[] funcs = genetix.getBestFunctionsFormatted(size);
-        output = new OutputGraphPanel(funcs);
-        output.addDrawGraph(graph);
-        output.setAxisLimits(input.getAxisLimits());
+        outputPanel = new OutputGraphPanel(funcs);
+        outputPanel.addDrawGraph(graph);
+        outputPanel.setAxisLimits(inputPanel.getAxisLimits());
 
-        appFrame.getContentPane().remove(input);
-        appFrame.getContentPane().add(output);
+        appFrame.getContentPane().remove(inputPanel);
+        appFrame.getContentPane().add(outputPanel);
         appFrame.pack();
         appFrame.setVisible(true);
-        output.repaint();
+        outputPanel.repaint();
     }
 
     public void run() {

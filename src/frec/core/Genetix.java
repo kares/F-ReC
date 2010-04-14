@@ -99,9 +99,7 @@ public abstract class Genetix implements Runnable {
             if ( computeStopped() ) return;
             if ( isSaving ) saveGeneration();
             computeNext();
-
-            debugGeneration( System.out );
-            
+            //debugGeneration( System.out );
             generationCounter++;
         }
         computing = null;
@@ -306,10 +304,10 @@ public abstract class Genetix implements Runnable {
 
     /**
      * This causes to save the current generation of functions (including the fitness values).
-     * GenFile object is used for saving to a file.
+     * NOTE: NOT USED !
      */
-    public void saveGeneration() {
-        if ( true ) return; // TODO disabled !
+    void saveGeneration() {
+        if ( true ) return; // TODO saving disabled !
         if (genFile == null) throw new IllegalStateException("no gen file");
         final GenetixFunction[] currentGeneration = getCurrentGeneration();
         for (int i=0; i<currentGeneration.length; i++) {
@@ -318,11 +316,11 @@ public abstract class Genetix implements Runnable {
     }
 
     /**
-     * This causes to print the current generation of functions (including the fitness values) 
-     * on the standart output.
-     * @param outStream the print stream e.g. <code>System.out</code>
+     * This causes to print the current generation of functions (including the fitness values).
+     * @param outStream
+     * NOTE: NOT USED !
      */
-    public void printGeneration(final PrintWriter outStream) {
+    void printGeneration(final PrintWriter outStream) {
         outStream.println("GENERATION " + generationCounter);
         final GenetixFunction[] currentGeneration = getCurrentGeneration();
         for (int i=0; i<currentGeneration.length; i++) {
@@ -330,7 +328,11 @@ public abstract class Genetix implements Runnable {
         }
     }
 
-    public void printGeneration(final PrintStream outStream) {
+    /**
+     * @param outStream
+     * NOTE: NOT USED !
+     */
+    void printGeneration(final PrintStream outStream) {
         outStream.println("GENERATION " + generationCounter);
         final GenetixFunction[] currentGeneration = getCurrentGeneration();
         for (int i=0; i<currentGeneration.length; i++) {
@@ -338,7 +340,11 @@ public abstract class Genetix implements Runnable {
         }
     }
 
-    public void debugGeneration(final PrintStream outStream) {
+    /**
+     * @param outStream
+     * NOTE: NOT USED !
+     */
+    void debugGeneration(final PrintStream outStream) {
         outStream.println("GENERATION " + generationCounter);
         final GenetixFunction[] currentGeneration = getCurrentGeneration();
         for (int i=0; i<currentGeneration.length; i++) {
