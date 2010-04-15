@@ -1,3 +1,18 @@
+/*
+ * Copyright 2004 Karol Bucek
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package org.kares.math.frec.gui;
 
@@ -6,14 +21,9 @@ import javax.swing.SwingUtilities;
 /**
  * This is the 3rd version of SwingWorker (also known as
  * SwingWorker 3), an abstract class that you subclass to
- * perform GUI-related work in a dedicated thread.  For
- * instructions on using this class, see:
- *
- * http://java.sun.com/docs/books/tutorial/uiswing/misc/threads.html
- *
- * Note that the API changed slightly in the 3rd version:
- * You must now invoke start() on the SwingWorker after
- * creating it.
+ * perform GUI-related work in a dedicated thread.
+ * 
+ * @author http://java.sun.com/docs/books/tutorial/uiswing/misc/threads.html
  */
 abstract class SwingWorker {
     

@@ -1,3 +1,18 @@
+/*
+ * Copyright 2004 Karol Bucek
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package org.kares.math.frec.gui;
 
@@ -23,10 +38,9 @@ import org.kares.math.frec.core.GPModelGenetix;
 import org.kares.math.frec.core.Genetix;
 
 /**
- * Class <code> GenetixSettings </code> is an gui panel
- * which is used to set the parameters of genetic programming.
- * An instance of this class is the first think the user sees
- * when runing the application.
+ * A settings panel for configuring parameters of the computation.
+ * 
+ * @author kares
  */
 public class GenetixSettings extends JPanel {
     
@@ -110,84 +124,84 @@ public class GenetixSettings extends JPanel {
         });
 
         final Panel panel = new Panel();
-        GridBagLayout layout = new GridBagLayout();
-        GridBagConstraints c = new GridBagConstraints();
-        panel.setLayout(layout);
+        final GridBagLayout gridLayout = new GridBagLayout();
+        final GridBagConstraints gridSetup = new GridBagConstraints();
+        panel.setLayout(gridLayout);
 
-        c.fill = GridBagConstraints.BOTH;
-        c.gridwidth = GridBagConstraints.RELATIVE;
-        layout.setConstraints(dataSizeLabel, c);
+        gridSetup.fill = GridBagConstraints.BOTH;
+        gridSetup.gridwidth = GridBagConstraints.RELATIVE;
+        gridLayout.setConstraints(dataSizeLabel, gridSetup);
         panel.add(dataSizeLabel);
-     	c.gridwidth = GridBagConstraints.REMAINDER; //end row
-        layout.setConstraints(dataSize, c);
+     	gridSetup.gridwidth = GridBagConstraints.REMAINDER; //end row
+        gridLayout.setConstraints(dataSize, gridSetup);
         panel.add(dataSize);
-        c.gridwidth = GridBagConstraints.RELATIVE;
-        layout.setConstraints(genSizeLabel, c);
+        gridSetup.gridwidth = GridBagConstraints.RELATIVE;
+        gridLayout.setConstraints(genSizeLabel, gridSetup);
         panel.add(genSizeLabel);
-     	c.gridwidth = GridBagConstraints.REMAINDER; //end row
-        layout.setConstraints(genSize, c);
+     	gridSetup.gridwidth = GridBagConstraints.REMAINDER; //end row
+        gridLayout.setConstraints(genSize, gridSetup);
         panel.add(genSize);
-        c.gridwidth = GridBagConstraints.RELATIVE;
-        layout.setConstraints(genMaxLabel, c);
+        gridSetup.gridwidth = GridBagConstraints.RELATIVE;
+        gridLayout.setConstraints(genMaxLabel, gridSetup);
         panel.add(genMaxLabel);
-     	c.gridwidth = GridBagConstraints.REMAINDER; //end row
-        layout.setConstraints(genMax, c);
+     	gridSetup.gridwidth = GridBagConstraints.REMAINDER; //end row
+        gridLayout.setConstraints(genMax, gridSetup);
         panel.add(genMax);
-        /*
-        c.gridwidth = GridBagConstraints.RELATIVE;
-        layout.setConstraints(minFunctionLengthLabel, c);
+        
+        gridSetup.gridwidth = GridBagConstraints.RELATIVE;
+        gridLayout.setConstraints(minFunctionLengthLabel, gridSetup);
         panel.add(minFunctionLengthLabel);
-     	c.gridwidth = GridBagConstraints.REMAINDER; //end row
-        layout.setConstraints(minFunctionLength, c);
+     	gridSetup.gridwidth = GridBagConstraints.REMAINDER; //end row
+        gridLayout.setConstraints(minFunctionLength, gridSetup);
         panel.add(minFunctionLength);
-        c.gridwidth = GridBagConstraints.RELATIVE;
-        layout.setConstraints(maxFunctionLengthLabel, c);
+        gridSetup.gridwidth = GridBagConstraints.RELATIVE;
+        gridLayout.setConstraints(maxFunctionLengthLabel, gridSetup);
         panel.add(maxFunctionLengthLabel);
-     	c.gridwidth = GridBagConstraints.REMAINDER; //end row
-        layout.setConstraints(maxFunctionLength, c);
+     	gridSetup.gridwidth = GridBagConstraints.REMAINDER; //end row
+        gridLayout.setConstraints(maxFunctionLength, gridSetup);
         panel.add(maxFunctionLength);
-        */
-        c.gridwidth = GridBagConstraints.RELATIVE;
-        layout.setConstraints(mutationProbabilityLabel, c);
+        
+        gridSetup.gridwidth = GridBagConstraints.RELATIVE;
+        gridLayout.setConstraints(mutationProbabilityLabel, gridSetup);
         panel.add(mutationProbabilityLabel);
-     	c.gridwidth = GridBagConstraints.REMAINDER; //end row
-        layout.setConstraints(mutationProbability, c);
+     	gridSetup.gridwidth = GridBagConstraints.REMAINDER; //end row
+        gridLayout.setConstraints(mutationProbability, gridSetup);
         panel.add(mutationProbability);
-        c.gridwidth = GridBagConstraints.RELATIVE;
-        layout.setConstraints(crossingProbabilityLabel, c);
+        gridSetup.gridwidth = GridBagConstraints.RELATIVE;
+        gridLayout.setConstraints(crossingProbabilityLabel, gridSetup);
         panel.add(crossingProbabilityLabel);
-     	c.gridwidth = GridBagConstraints.REMAINDER; //end row
-        layout.setConstraints(crossingProbability, c);
+     	gridSetup.gridwidth = GridBagConstraints.REMAINDER; //end row
+        gridLayout.setConstraints(crossingProbability, gridSetup);
         panel.add(crossingProbability);
-        c.gridwidth = GridBagConstraints.RELATIVE;
-        layout.setConstraints(selectionProbabilityLabel, c);
+        gridSetup.gridwidth = GridBagConstraints.RELATIVE;
+        gridLayout.setConstraints(selectionProbabilityLabel, gridSetup);
         panel.add(selectionProbabilityLabel);
-     	c.gridwidth = GridBagConstraints.REMAINDER; //end row
-        layout.setConstraints(selectionProbability, c);
+     	gridSetup.gridwidth = GridBagConstraints.REMAINDER; //end row
+        gridLayout.setConstraints(selectionProbability, gridSetup);
         panel.add(selectionProbability);
-        c.gridwidth = GridBagConstraints.RELATIVE;
-        layout.setConstraints(reproductionProbabilityLabel, c);
+        gridSetup.gridwidth = GridBagConstraints.RELATIVE;
+        gridLayout.setConstraints(reproductionProbabilityLabel, gridSetup);
         panel.add(reproductionProbabilityLabel);
-     	c.gridwidth = GridBagConstraints.REMAINDER; //end row
-        layout.setConstraints(reproductionProbability, c);
+     	gridSetup.gridwidth = GridBagConstraints.REMAINDER; //end row
+        gridLayout.setConstraints(reproductionProbability, gridSetup);
         panel.add(reproductionProbability);
 
         Panel p1 = new Panel();
         p1.add(new JLabel());
-     	c.gridwidth = GridBagConstraints.REMAINDER; //end row
-        layout.setConstraints(p1, c);
+     	gridSetup.gridwidth = GridBagConstraints.REMAINDER; //end row
+        gridLayout.setConstraints(p1, gridSetup);
         panel.add(p1);
 
         Panel p2 = new Panel();
         p2.add(arbitraryMutations, BorderLayout.CENTER);
-     	c.gridwidth = GridBagConstraints.REMAINDER; //end row
-        layout.setConstraints(p2, c);
+     	gridSetup.gridwidth = GridBagConstraints.REMAINDER; //end row
+        gridLayout.setConstraints(p2, gridSetup);
         panel.add(p2);
 
         Panel p3 = new Panel();
         p3.add(arbitraryCrossings, BorderLayout.CENTER);
-     	c.gridwidth = GridBagConstraints.REMAINDER; //end row
-        layout.setConstraints(p3, c);
+     	gridSetup.gridwidth = GridBagConstraints.REMAINDER; //end row
+        gridLayout.setConstraints(p3, gridSetup);
         panel.add(p3);
 
         modelNameCombo = new JComboBox(getGenetixClassNames());
@@ -196,8 +210,8 @@ public class GenetixSettings extends JPanel {
         Panel p4 = new Panel(new FlowLayout());
         p4.add(new JLabel(" Model :      "));
         p4.add(modelNameCombo);
-     	c.gridwidth = GridBagConstraints.REMAINDER; //end row
-        layout.setConstraints(p4, c);
+     	gridSetup.gridwidth = GridBagConstraints.REMAINDER; //end row
+        gridLayout.setConstraints(p4, gridSetup);
         panel.add(p4);
 
         selectedModelName = (String) modelNameCombo.getSelectedItem();
@@ -215,8 +229,8 @@ public class GenetixSettings extends JPanel {
 
         Panel p5 = new Panel();
         p5.add(new JLabel());
-     	c.gridwidth = GridBagConstraints.REMAINDER; //end row
-        layout.setConstraints(p5, c);
+     	gridSetup.gridwidth = GridBagConstraints.REMAINDER; //end row
+        gridLayout.setConstraints(p5, gridSetup);
         panel.add(p5);
 
         setLayout(new BorderLayout());
@@ -235,6 +249,10 @@ public class GenetixSettings extends JPanel {
         return this;
     }
 
+    /**
+     * Validate the input and return true if its valid.
+     * @return False if validation failed, true otherwise.
+     */
     public boolean validateInput() {
         boolean valid = true; String text;
         final Color invalidColor = Color.RED;
@@ -281,7 +299,6 @@ public class GenetixSettings extends JPanel {
             }
         }
 
-        /*
         int minFxLen = -1;
         if ( (text = minFunctionLength.getText()) == null
                 || text.trim().length() == 0 ) {
@@ -318,7 +335,6 @@ public class GenetixSettings extends JPanel {
                 maxFunctionLength.setBackground(invalidColor);
             }
         }
-        */
 
         if ( (text = mutationProbability.getText()) == null
                 || text.trim().length() == 0 ) {
@@ -400,60 +416,60 @@ public class GenetixSettings extends JPanel {
     }
 
     /**
-     * Method to receive this panel's input data.
-     *
-     * @return The size of the training data created from the graph.
-     */        
-    
+     * @return The data size settings value.
+     */
     public int getDataSize() {
         return Integer.parseInt(dataSize.getText());
     }
 
+    /**
+     * @param dataSize
+     */
     public void setDataSize(int dataSize) {
         if (dataSize < 0) throw new IllegalArgumentException("< 0");
         this.dataSize.setText(Integer.toString(dataSize));
     }
     
     /**
-     * Method to receive this panel's input data.
-     *
-     * @return The size of one generation.
-     */        
-    
+     * @return The configured size of one generation.
+     */
     public int getGenSize() {
         return Integer.parseInt(genSize.getText());
     }
 
+    /**
+     * @param genSize
+     */
     public void setGenSize(int genSize) {
         if (genSize < 0) throw new IllegalArgumentException("< 0");
         this.genSize.setText(Integer.toString(genSize));
     }
 
     /**
-     * Method to receive this panel's input data.
-     *
-     * @return The maximal generation limit.
-     */    
-    
+     * @return The maximum limit per generation.
+     */
     public int getGenMax() {
         return Integer.parseInt(genMax.getText());
     }    
 
+    /**
+     * @param genMax
+     */
     public void setGenMax(int genMax) {
         if (genMax < 0) throw new IllegalArgumentException("< 0");
         this.genMax.setText(Integer.toString(genMax));
     }
 
     /**
-     * Method to receive this panel's input data.
-     *
-     * @return The mutation probability.
-     */        
-    
+     * @return The configured mutation probability.
+     */
     public float getGenMutationProbability() {
         return Float.parseFloat(mutationProbability.getText());
     }
 
+    /**
+     * @param probability
+     */
     public void setGenMutationProbability(float probability) {
         if (probability < 0 || probability > 1.0F) {
             throw new IllegalArgumentException("should be >= 0 && <= 1");
@@ -468,15 +484,15 @@ public class GenetixSettings extends JPanel {
     }
 
     /**
-     * Method to receive this panel's input data.
-     *
-     * @return The crossing probability.
+     * @return The configured crossing probability.
      */            
-    
     public float getGenCrossingProbability() {
         return Float.parseFloat(crossingProbability.getText());
     }  
 
+    /**
+     * @param probability
+     */
     public void setGenCrossingProbability(float probability) {
         if (probability < 0 || probability > 1.0F) {
             throw new IllegalArgumentException("should be >= 0 && <= 1");
@@ -491,15 +507,15 @@ public class GenetixSettings extends JPanel {
     }
 
     /**
-     * Method to receive this panel's input data.
-     *
-     * @return The reproduction probability.
-     */            
-    
+     * @return The configured reproduction probability.
+     */
     public float getGenReproductProbability() {
         return Float.parseFloat(reproductionProbability.getText());
     }        
 
+    /**
+     * @param probability
+     */
     public void setGenReproductProbability(float probability) {
         if (probability < 0 || probability > 1.0F) {
             throw new IllegalArgumentException("should be >= 0 && <= 1");
@@ -514,15 +530,15 @@ public class GenetixSettings extends JPanel {
     }
 
     /**
-     * Method to receive this panel's input data.
-     *
-     * @return The selection probability.
-     */            
-    
+     * @return The configured selection probability.
+     */
     public float getGenSelectionProbability() {
         return Float.parseFloat(selectionProbability.getText());
     }
 
+    /**
+     * @param probability
+     */
     public void setGenSelectionProbability(float probability) {
         if (probability < 0 || probability > 1.0F) {
             throw new IllegalArgumentException("should be >= 0 && <= 1");
@@ -536,53 +552,75 @@ public class GenetixSettings extends JPanel {
         }
     }
 
+    /**
+     * @return True if arbitrary mutations were selected.
+     */
     public boolean isArbitraryMutations() {
         return arbitraryMutations.isSelected();
     }
 
+    /**
+     * @param flag
+     */
     public void setArbitraryMutations(boolean flag) {
         arbitraryMutations.setSelected(flag);
     }
     
+    /**
+     * @return @return True if arbitrary crossings were selected.
+     */
     public boolean isArbitraryCrossings() {
         return arbitraryCrossings.isSelected();
     }
 
+    /**
+     * @param flag
+     */
     public void setArbitraryCrossings(boolean flag) {
         arbitraryCrossings.setSelected(flag);
     }
 
+    /**
+     * @return The minimum function length limit.
+     */
     public int getMinFunctionLength() {
         return Integer.parseInt(minFunctionLength.getText());
     }
 
+    /**
+     * @param length
+     */
     public void setMinFunctionLength(int length) {
         if (length < 0) throw new IllegalArgumentException("< 0");
         this.minFunctionLength.setText(Integer.toString(length));
     }
 
+    /**
+     * @return The maximum function length limit.
+     */
     public int getMaxFunctionLength() {
         return Integer.parseInt(maxFunctionLength.getText());
     }
 
+    /**
+     * @param length
+     */
     public void setMaxFunctionLength(int length) {
         if (length < 0) throw new IllegalArgumentException("< 0");
         this.maxFunctionLength.setText(Integer.toString(length));
     }
 
     /**
-     * This indicates that the object is in advanced mode
-     * that means that more setting parameters will be used
-     * and an advanced genetical programming will be used
-     * instead of the basic one.
-     *
-     * @return The state indicating if the advanced checkbox
-     * has been selected.
+     * @return The selected Genetix model name.
      */
     public String getSelectedModelName() {
         return selectedModelName;
     }
 
+    /**
+     * @see #getSelectedModelName()
+     * @return The selected Genetix class.
+     */
     public Class getSelectedModelClass() {
         return (Class) modelClassNames.get(selectedModelName);
     }
@@ -602,11 +640,19 @@ public class GenetixSettings extends JPanel {
         return (String[]) names.toArray(new String[names.size()]);
     }
 
+    /**
+     * Set a listener to invoke when the UI is ready (confirmed). 
+     * @param cancelListener
+     */
     public void setReadyListener(ActionListener readyListener) {
         this.readyListener = readyListener;
         //return this;
     }
 
+    /**
+     * Set a listener to invoke when the UI is canceled. 
+     * @param cancelListener
+     */
     public void setCancelListener(ActionListener cancelListener) {
         this.cancelListener = cancelListener;
         //return this;

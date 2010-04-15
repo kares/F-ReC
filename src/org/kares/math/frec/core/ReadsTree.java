@@ -1,3 +1,19 @@
+/*
+ * Copyright 2004 Karol Bucek
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.kares.math.frec.core;
 
 import java.util.ArrayList;
@@ -6,34 +22,36 @@ import java.util.Random;
 import org.kares.math.frec.util.RandomHelper;
 
 /**
- * <code>ReadsTree</code> is an object representation of single rooted trees.
- * This class provides the operations necessary for the "genetic" operations
- * on such trees.
+ * Instances of <code>ReadsTree</code> are an object representation of single 
+ * rooted trees. This class provides the basic operations necessary for 
+ * "genetic" operations on such trees.
  * The primary thing that characterizes instances of this class is Read's
- * linear code aka a code used for effectively code (tree) graphs as a sequence
- * of numbers.
+ * linear code that is a code used for effectively code (tree) graphs as 
+ * a sequence of numbers.
+ * <p>
+ * As an implementation detail the maximum degree of a node in a graph is 9.
  *
  * NOTE: Instances of this class are mutable and are not thread-safe !
  *
  * @see TreeGraph#forReadsCode(java.lang.String) 
+ * @author kares
  */
-@SuppressWarnings("serial")
 public class ReadsTree implements java.io.Serializable, Cloneable {
 
     private static int maxRandomCodeLength = 10;
 
-    /** Read's linear code as a string. */
+    /** Read's linear code as a string - sequence of 0-9 values. */
     private String code;
 
     /**
      * Creates a new tree with the given code.
      *
-     * NOTE: The passed string is not validated !
+     * NOTE: The passed code is not validated !
      * 
      * @param code
      */
-    public ReadsTree(final String code) {
-        this.code = code;
+    public ReadsTree(final CharSequence code) {
+        this.code = code.toString();
     }
     
     public static int getMaxRandomCodeLength() {
@@ -47,16 +65,25 @@ public class ReadsTree implements java.io.Serializable, Cloneable {
         maxRandomCodeLength = length;
     }
 
+    /**
+     * Generates a random tree instance.
+     * @return random tree
+     */
     public static ReadsTree getRandomInstance() {
         return getRandomInstance(randomCodeLength());
     }
 
+    /**
+     * Generates a random tree instance.
+     * @param length
+     * @return random tree
+     */
     public static ReadsTree getRandomInstance(int length) {
         return new ReadsTree(generateRandomCode(length));
     }
 
     /**
-     * Generate a random int - a valid read's code length.
+     * Return a random int - a valid Read's code length.
      * @see ReadsTree#getMaxRandomCodeLength()
      * @return random code length
      */
@@ -65,7 +92,7 @@ public class ReadsTree implements java.io.Serializable, Cloneable {
     }
 
     /**
-     * Method generates a random code of the given length.
+     * Generates a random Read's code of the given length.
      *
      * @param len The length of the randomly generated tree code.
      * @return String representing a random tree code.
@@ -98,7 +125,6 @@ public class ReadsTree implements java.io.Serializable, Cloneable {
 
     /**
      * Method generates a random code of the given length.
-     *
      * @param min_len The minimal length of the randomly generated code.
      * @param max_len The maximal length of the randomly generated code.
      * @return String representing a random tree code.
@@ -111,10 +137,8 @@ public class ReadsTree implements java.io.Serializable, Cloneable {
     private transient byte[] codeDigits;
 
     /**
-     * Returns the code representation of this tree as decimnal digits.
-     * 
-     * NOTE: The array shouldn't be modified !
-     *
+     * Returns the code representation of this tree as an array of numbers.
+     * NOTE: The array should be treated as read-only !
      * @return code as decimal digits.
      */
     public byte[] getCodeDigits() {
@@ -129,9 +153,8 @@ public class ReadsTree implements java.io.Serializable, Cloneable {
     }
 
     /**
-     * Returns the <code>code</code> of this tree.
-     *
-     * @return String Read's code of the tree.
+     * Returns the Read's code of this tree.
+     * @return String Read's code of this tree.
      */
     public String getCode() {
         return this.code;
@@ -151,6 +174,9 @@ public class ReadsTree implements java.io.Serializable, Cloneable {
         //this.subcodeLength = null;
     }
 
+    /**
+     * @return The length of this tree.
+     */
     public int length() {
         return this.code.length();
     }
@@ -158,8 +184,7 @@ public class ReadsTree implements java.io.Serializable, Cloneable {
     //private transient int[] subcodeLength;
 
     /**
-     * Returns the length of a subtree (subcode) of this tree.
-     * 
+     * Returns the length of a subtree in this tree.
      * @param pos The code position of the subtree.
      * @return The length of a subtree at the given position.
      */
@@ -193,10 +218,9 @@ public class ReadsTree implements java.io.Serializable, Cloneable {
     }
 
     /**
-     * Finds and returns a subcode of this tree.
-     * 
+     * Finds and returns a sub-code of this tree. 
      * @param pos The code position of the subtree.
-     * @return Subcode of this tree.
+     * @return Read's code of a subtree of this tree.
      */
     public String subcode(int pos) {
         final int len = subcodeLength(pos);
@@ -204,9 +228,9 @@ public class ReadsTree implements java.io.Serializable, Cloneable {
     }
 
     /**
+     * Returns a subtree of this tree.
      * @param pos The code position of the subtree.
      * @return Sub-tree of this tree.
-     *
      * @see #subcode(int)
      */
     public ReadsTree subTree(int pos) {
@@ -216,12 +240,12 @@ public class ReadsTree implements java.io.Serializable, Cloneable {
     /**
      * This method causes that this tree (code) will be randomly mutated at a
      * random position, the whole subtree at the specified position will be
-     * replaced with a new one.
+     * replaced with a new (randomly generated) one.
      *
      * NOTE: The mutation modifies this tree object !
      *
      * @param mut_len Length of the added (mutation) subtree.
-     * @return The random position where the mutation occured.
+     * @return The random position where the mutation ocured.
      */
     public int mutateCode(int mut_len) {
         final int pos = 1 + RandomHelper.randomInt(length() - 1);
@@ -232,13 +256,13 @@ public class ReadsTree implements java.io.Serializable, Cloneable {
     /**
      * This method causes that this tree (code) will be randomly mutated at a
      * random position, the whole subtree at the specified position will be
-     * replaced with a new one.
+     * replaced with a new (randomly generated) one.
      *
      * NOTE: The mutation modifies this tree object !
      *
-     * @param min_len The minimal length of the resulting tree.
-     * @param max_len The maximal length of the resulting tree.
-     * @return The random position where the mutation occured.
+     * @param min_len The minimal allowed length of the resulting tree.
+     * @param max_len The maximal allowed length of the resulting tree.
+     * @return The random position where the mutation ocured.
      */
     public int mutateCode(int min_len, int max_len) {
         final int pos = 1 + RandomHelper.randomInt(length() - 1);
@@ -247,6 +271,12 @@ public class ReadsTree implements java.io.Serializable, Cloneable {
         return pos;
     }
 
+    /**
+     * @param context
+     * @see #mutateCode(int)
+     * @see #mutateCode(int, int)
+     * @see MutationContext
+     */
     public void mutateCode(final MutationContext context) {
         final int pos = context.getIndex();
         final int len = context.getLength();
@@ -254,6 +284,12 @@ public class ReadsTree implements java.io.Serializable, Cloneable {
         setCode(generateMutatedCode(pos, len));
     }
 
+    /**
+     * Generated a mutated code for this tree.
+     * @param pos
+     * @param mut_len
+     * @return Mutated code based on this tree's code.
+     */
     protected String generateMutatedCode(int pos, int mut_len) {
         final int pos_len = subcodeLength(pos);
         return code.substring(0, pos) +
@@ -276,190 +312,40 @@ public class ReadsTree implements java.io.Serializable, Cloneable {
     }
 
     /**
-     * Mark the begining and end positions of the last crossing.
-     */
-    //private int crossPosBeg = 0, crossPosEnd = 0;
-    /*
-    protected int getCrossPosBeg() {
-        if ( isCrossed() ) return crossPosBeg;
-        throw new IllegalStateException("cross position not set");
-    }
-
-    protected int getCrossPosEnd() {
-        if ( isCrossed() ) return crossPosEnd;
-        throw new IllegalStateException("cross position not set");
-    }
-    */
-
-    /*
-    protected boolean isCrossed() {
-        return crossPosEnd > 0;
-    }
-    */
-
-    /**
-     * Sets the cross position (after crossing) for this tree.
-     * @param pos
-     */
-    /*
-    protected void setCrossPosition(int pos) {
-        final int len = this.code.length();
-        if (pos < 0 && pos >= len)
-            throw new IllegalArgumentException(
-                    "position must satisfy: pos >= 0 and pos < length");
-        crossPosBeg = pos;
-        crossPosEnd = subcodeLength(pos);
-        crossPosEnd += crossPosBeg;
-    }
-
-    private void setCrossPosition(int beg, int end) {
-        final int len = this.code.length();
-        if (beg <= 0 || beg >= len)
-            throw new IllegalArgumentException(
-                    "position beg not in (0, length) " + beg);
-        if (beg <= beg || beg >= len)
-            throw new IllegalArgumentException(
-                    "position end not in (beg, length) " + end);
-        crossPosBeg = beg;
-        crossPosEnd = end;
-    }
-    */
-
-    /**
-     * Crosses two <code>ReadsTree</code> objects.
-     * A random position is selected in both trees and then the
-     * subtrees are exchanged among the 2 trees.
+     * Crosses two trees objects by selecting a random position in 
+     * both trees and then exchanges the subtrees among each other.
      *
-     * NOTE: the original trees are not changed !
+     * NOTE: the original trees are not affected by the crossing !
      *
-     * @param that The tree to be crossed with this.
-     * @return The new (2) trees created.
+     * @param that The tree to be crossed with this tree.
+     * @return The new child trees created as a result of crossing.
      */
     public ReadsTree[] crossCode(final ReadsTree that) {
-        /*
-        final int len1 = this.length();
-        final int len2 = that.length();
-        int pos1 = 0, pos2 = 0, pos1_len = 1, pos2_len = 1;
-        
-        if (len1 == 1 && len2 == 1) {
-            this.setCrossPosition(0, 1);
-            that.setCrossPosition(0, 1);
-            return new ReadsTree[] { this, that };
-        }
-
-        if (len1 != 1) pos1 = 1 + RandomHelper.randomInt(len1 - 1);
-        if (len2 != 1) pos2 = 1 + RandomHelper.randomInt(len2 - 1);
-        pos1_len = this.subcodeLength(pos1);
-        pos2_len = that.subcodeLength(pos2);
-        this.setCrossPosition(pos1, pos1 + pos1_len);
-        that.setCrossPosition(pos2, pos2 + pos2_len);
-
-        String res1 = this.code.substring(0, pos1) +
-                      that.code.substring(pos2, pos2 + pos2_len) +
-                      this.code.substring(pos1 + pos1_len, len1);
-        String res2 = that.code.substring(0, pos2) +
-                      this.code.substring(pos1, pos1 + pos1_len) +
-                      that.code.substring(pos2 + pos2_len, len2);
-
-        return new ReadsTree[] { new ReadsTree(res1), new ReadsTree(res2) };
-        */
         return crossCode(that, 0, Integer.MAX_VALUE);
     }
 
     /**
-     * Method that crosses two <code>ReadsTree</code> objects. This method
-     * causes that a random position is selected in both trees and then the
-     * subtrees are changed among these trees. Limits for the new that codes are
-     * provided by the parameters of the method.
+     * Crosses two trees objects by selecting a random position in 
+     * both trees and then exchanges the subtrees among each other. 
+     * Limits for the new that codes are provided as parameters.
      * 
-     * @param that <code>ReadsTree</code> object to be crossed with this.
-     * @param min_len Minimal length of the newly created trees.
-     * @param max_len Maximal length of the newly created trees.
-     * @return The new (2) trees created.
+     * @param that The tree to be crossed with this tree.
+     * @param min_len The minimal required length of the newly created trees.
+     * @param max_len The maximal required length of the newly created trees.
+     * @return The new child trees created as a result of crossing.
      */
     public ReadsTree[] crossCode(ReadsTree that, int min_len, int max_len) {
-        /*
-        if (this.isCrossed() && that.isCrossed()) {
-        // either we are using cross positons that
-        // has been set before, they may change if they
-        // do not satisfy the conditions about min_len &
-        // max_len or they won't change (even if they do not
-        // satisfy these conditions) if we can not find
-        // positions that will satisfy them (see bellow)
-            pos1 = this.crossPosBeg;
-            pos1_len = this.crossPosEnd - pos1;
-            pos2 = that.crossPosBeg;
-            pos2_len = that.crossPosEnd - pos2;
-        }
-        else { // !crossed for both
-            if (!this.isCrossed() && !that.isCrossed()) {
-                if (len1 != 1) pos1 = 1 + RandomHelper.randomInt(len1 - 1);
-                if (len2 != 1) pos2 = 1 + RandomHelper.randomInt(len2 - 1);
-                pos1_len = this.subcodeLength(pos1);
-                pos2_len = that.subcodeLength(pos2);
-            }
-            else {
-                if (this.isCrossed()) {
-                    pos1 = this.crossPosBeg;
-                    pos1_len = this.crossPosEnd - pos1;
-                    if (len2 != 1) pos2 = 1 + RandomHelper.randomInt(len2 - 1);
-                    pos2_len = that.subcodeLength(pos2);
-                }
-                if (that.isCrossed()) {
-                    pos2 = that.crossPosBeg;
-                    pos2_len = that.crossPosEnd - pos2;
-                    if (len1 != 1) pos1 = 1 + RandomHelper.randomInt(len1 - 1);
-                    pos1_len = this.subcodeLength(pos1);
-                }
-            }
-        }// !crossed for both
-
-        int counter = 0;
-        while ((len1 - pos1_len + pos2_len < min_len)
-                || (len1 - pos1_len + pos2_len > max_len)
-                || (len2 - pos2_len + pos1_len < min_len)
-                || (len2 - pos2_len + pos1_len > max_len)) {
-            // trying to find positions that match the
-            // limits (min_len & max_len):
-            if (++counter == 100) break;
-            if (!this.isCrossed()) {
-                pos1 = 1 + RandomHelper.randomInt(len1 - 1);
-                pos1_len = this.subcodeLength(pos1);
-            }
-            else if (counter > 50) {
-                pos1 = 1 + RandomHelper.randomInt(len1 - 1);
-                pos1_len = this.subcodeLength(pos1);
-            }
-            if (!that.isCrossed()) {
-                pos2 = 1 + RandomHelper.randomInt(len2 - 1);
-                pos2_len = that.subcodeLength(pos2);
-            }
-            else if (counter > 50) {
-                pos2 = 1 + RandomHelper.randomInt(len2 - 1);
-                pos2_len = that.subcodeLength(pos2);
-            }
-        }
-
-        if (counter == 100 && this.isCrossed() && that.isCrossed()) {
-        // in case we are using a cross position which is bad
-        // (not satisfiing the conditions about min_len & max_len)
-        // but we can not satisfy the conditions after 100 iterations
-        // we will still use the "bad" cross positions set before
-            pos1 = this.crossPosBeg;
-            pos1_len = this.crossPosEnd - pos1;
-            pos2 = that.crossPosBeg;
-            pos2_len = that.crossPosEnd - pos2;
-        }
-        else {
-            this.setCrossPosition(pos1, pos1 + pos1_len);
-            that.setCrossPosition(pos2, pos2 + pos2_len);
-        }
-        */
         CrossingContext context = randomCrossingContext(that, min_len, max_len);
         crossCode( context );
         return new ReadsTree[] { context.getChild1(), context.getChild2() };
     }
 
+    /**
+     * @param context
+     * @see #crossCode(ReadsTree)
+     * @see #crossCode(ReadsTree, int, int)
+     * @See CrossingContext
+     */
     public void crossCode(final CrossingContext context) {
         final ReadsTree tree1 = context.parent1; // this
         final ReadsTree tree2 = context.parent2; // that
@@ -488,14 +374,15 @@ public class ReadsTree implements java.io.Serializable, Cloneable {
     }
 
     /**
-     * Selects a random cross position for this and the passed tree.
+     * Selects random cross positions for this and the passed tree.
      * The selected position satisfies the given constraints meaning the crossing
      * applied at those positions will produce codes that are between the given 
      * length constraints.
-     * @param that the other tree to be crossed with
-     * @param min_len minimum code length constraint
-     * @param max_len maximum code length constraint
-     * @throws IllegalStateException if positions could not be selected
+     * 
+     * @param that The tree to be crossed with this tree.
+     * @param min_len The minimum code length constraint.
+     * @param max_len The maximum code length constraint.
+     * @throws IllegalStateException if such positions could not be selected
      */
     protected CrossingContext randomCrossingContext(final ReadsTree that, int min_len, int max_len) {
         final int len1 = this.length();
@@ -550,6 +437,11 @@ public class ReadsTree implements java.io.Serializable, Cloneable {
         //that.setCrossPosition(pos2, pos2 + pos2_len);
     }
 
+    /**
+     * A mutation context. Holds all information required for mutating a tree.
+     * 
+     * @author kares
+     */
     protected static class MutationContext {
 
         final ReadsTree target;
@@ -588,6 +480,11 @@ public class ReadsTree implements java.io.Serializable, Cloneable {
 
     }
 
+    /**
+     * A crossing context. Holds all information required for crossing trees.
+     * 
+     * @author kares
+     */
     protected static class CrossingContext {
 
         final ReadsTree parent1;
@@ -723,7 +620,8 @@ public class ReadsTree implements java.io.Serializable, Cloneable {
     }
 
     /**
-     * @return String representation for debugging purposes
+     * For debugging purposes. 
+     * @see java.lang.Object#toString()
      */
     public String toString() {
         return "ReadsTree: " + code + "";

@@ -1,8 +1,27 @@
+/*
+ * Copyright 2004 Karol Bucek
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package org.kares.math.frec.core;
 
 /**
+ * A helper class to represent Read's trees as real topological graphs 
+ * (with nodes and edges) if required.
  *
+ * @see #forReadsCode(String)
+ * 
  * @author kares
  */
 public class TreeGraph {
@@ -12,11 +31,20 @@ public class TreeGraph {
     /** Edge set of a tree. */
     private final int[][] E;
 
+    /**
+     * @param V
+     * @param E
+     */
     public TreeGraph(int[] V, int[][] E) {
         this.V = V;
         this.E = E;
     }
 
+    /**
+     * Returns a graph instance from Read's code.
+     * @param code
+     * @return A tree graph instance.
+     */
     public static TreeGraph forReadsCode(final String code) {
         final int len = code.length();
         final int[][] E_tmp = new int[len - 1][2];
@@ -59,25 +87,22 @@ public class TreeGraph {
     }
 
     /**
-     * Returns the vertex set of this tree (<code>V</code>).
-     *
-     * @return  Parameter <code>V</code> for this object,
-     *          null if the graph has been not set.
+     * @return Returns the vertex set of this (tree) graph. 
      */
     public int[] getVertices() {
         return this.V;
     }
 
     /**
-     * Returns the edge set of this tree (<code>E</code>).
-     *
-     * @return  Parameter <code>E</code> for this object,
-     *          null if the graph has been not set.
+     * @return Returns the edge set of this (tree) graph.
      */
     public int[][] getEdges() {
         return this.E;
     }
 
+    /**
+     * @return Returns the vertex degrees.
+     */
     public int[] getDegrees() {
         final int ctr = V.length;
         final int[] degrees = new int[ctr];
@@ -92,6 +117,10 @@ public class TreeGraph {
         return degrees;
     }
 
+    /**
+     * Converts the (tree) graph to Read's code. 
+     * @return Read's code for this graph.
+     */
     public String toReadsCode() {
         final StringBuffer code = new StringBuffer();
         appendCode(code, getDegrees(), 0);

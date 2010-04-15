@@ -1,3 +1,19 @@
+/*
+ * Copyright 2004 Karol Bucek
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.kares.math.frec.core;
 
 import java.util.Random;
@@ -5,98 +21,55 @@ import java.util.Random;
 import org.kares.math.frec.util.RandomHelper;
 
 /**
- * <code>LimitedTree</code> is an extension of Read's trees with
- * limits for the tree's code. These limits apply during the random
- * code generation, they include a minimal and maximal value for the
- * code elements.
+ * An extension of Read's trees with limits for the tree's code. 
+ * These limits apply during the random code generation, they include 
+ * a minimal and maximal value for the code elements (that is for the
+ * degree of the nodes in the graph).
  * <p>
- * NOTE: 
- * Generaly the code elements of a <code>ReadsTree<code> are not 
- * limited, but the computation is correct only when assuming that
- * the code element = vertex degree in a (tree) graph is in [0,9].
+ * Generally the degree of a Read's tree nodes is not limited, but 
+ * as an implementation detail the computation is currently only correct
+ * when assuming that the code element = vertex degree in a (tree) graph 
+ * is between [0,9]. This is sufficient for our purposes as the degree
+ * will represent the arity of a function - and thus we will further 
+ * probably further limit it when using {@link FunctionTree}s.
+ * 
+ * @author kares
  */
-@SuppressWarnings("serial")
 public class LimitedTree extends ReadsTree {
     
     private static int codeElementMin = 0; // downer limit [1..codeElementMax]
     private static int codeElementMax = 9; // upper limit [codeElementMin..9]
 
     /**
-     * Alocates a new <code>LimitedTree</code> , this code is set from the
-     * value provided.
+     * Creates a new limited tree with the given code.
      * 
-     * @param code
-     *            The new code of this tree.
+     * NOTE: The passed code is not validated !
+     * 
+     * @param code Read's code of this tree.
      */
     public LimitedTree(final String code) {
         super(code);
     }
 
     /**
-     * This method is used to set the limits of this <code>LimitedTree</code>.
-     * The code elements are generaly numbers from [0,9]. This methos sets the
-     * limits thus the elements will be from [min_arity, max_arity].
-     * 
-     * @param min_arity
-     *            Downer limit for the code elements of this tree.
-     * @param max_arity
-     *            Upper limit for the code elements of this tree.
-     * @throws IllegalArgumentException
-     *             if <code> min_arity > max_arity </code> or
-     *             <code> min_arity < 0 </code> or <code> max_arity > 9 </code>
-     */
-
-    public static void setCodeElementLimits(int min_arity, int max_arity) {
-        if (max_arity < min_arity)
-            throw new IllegalArgumentException("max_arity < min_arity");
-        setCodeElementMin(min_arity);
-        setCodeElementMax(max_arity);
-    }
-
-    public static void setCodeElementMin(int min_arity) {
-        if (min_arity < 0)
-            throw new IllegalArgumentException("min_arity < 0");
-        codeElementMin = min_arity;
-    }
-
-    public static int getCodeElementMin() {
-        return codeElementMin;
-    }
-
-    public static void setCodeElementMax(int max_arity) {
-        if (max_arity > 9)
-            throw new IllegalArgumentException("max_arity > 9");
-        codeElementMax = max_arity;
-    }
-
-    public static int getCodeElementMax() {
-        return codeElementMax;
-    }
-
-    /**
-     * Returns a new instance with the code generated randomly with a
-     * random length between [2, maxRandomCodeLength].
-     * @return random instance
+     * Generates a random tree instance.
+     * @return random tree
      */
     public static LimitedTree getRandomInstance() {
         return getRandomInstance(randomCodeLength());
     }
 
     /**
-     * Returns a new instance with the code generated randomly with
-     * a given length.
+     * Generates a random tree instance.
      * @param length
-     * @return random instance
+     * @return random tree
      */
     public static LimitedTree getRandomInstance(final int length) {
         return new LimitedTree(generateRandomCode(length));
     }
 
     /**
-     * Generates a random <code>LimitedTree</code> code of a specified length.
-     * 
-     * @param len The length of the randomly generated tree code.
-     * @return A string representing the (limited) tree's code.
+     * @see ReadsTree#generateRandomCode(int)
      */
     public static String generateRandomCode(int len) {
         if (len == 1) return "0";
@@ -118,15 +91,17 @@ public class LimitedTree extends ReadsTree {
             for (int i = 1; i < len - 1; i++) {
                 d[i] = d[i - 1] - rnd;
                 if (d[i] == len - i - 1) {
-                    if (codeElementMax <= d[i])
+                    if (codeElementMax <= d[i]) {
                         rnd = 1 + random.nextInt(codeElementMax);
-                    else
+                    } else {
                         rnd = 1 + random.nextInt(d[i]);
+                    }
                 } else {
-                    if (codeElementMax <= d[i])
+                    if (codeElementMax <= d[i]) {
                         rnd = random.nextInt(codeElementMax + 1);
-                    else
+                    } else {
                         rnd = random.nextInt(d[i] + 1);
+                    }
                 }
                 res.append(rnd);
             }
@@ -137,11 +112,12 @@ public class LimitedTree extends ReadsTree {
             for (int i = 1; i < len - 1; i++) {
                 d[i] = d[i - 1] - rnd;
                 if (d[i] == len - i - 1) {
-                    if (codeElementMax <= d[i])
+                    if (codeElementMax <= d[i]) {
                         rnd = codeElementMin + random.nextInt(codeElementMax - codeElementMin + 1);
-                    else {
-                        if (codeElementMin <= d[i])
+                    } else {
+                        if (codeElementMin <= d[i]) {
                             rnd = codeElementMin + random.nextInt(d[i] - codeElementMin + 1);
+                        }
                         else rnd = 0;
                     }
                 }
@@ -152,8 +128,9 @@ public class LimitedTree extends ReadsTree {
                         else rnd = 0;
                     } else {
                         if (codeElementMin <= d[i]) {
-                            if (random.nextInt(2) == 1)
+                            if (random.nextInt(2) == 1) {
                                 rnd = codeElementMin + random.nextInt(d[i] - codeElementMin + 1);
+                            } 
                             else rnd = 0;
                         }
                         else rnd = 0;
@@ -167,16 +144,7 @@ public class LimitedTree extends ReadsTree {
     }
 
     /**
-     * Method provides a random <code>LimitedTree</code> code generation of a
-     * limited length.
-     * <p>
-     * This is mainly used by constructors.
-     * 
-     * @param min_len
-     *            The minimal length of the randomly generated tree code.
-     * @param max_len
-     *            The maximal length of the randomly generated tree code.
-     * @return A string representing the code.
+     * @see ReadsTree#generateRandomCode(int, int)
      */
     public static String generateRandomCode(int min_len, int max_len) {
         int len = min_len + RandomHelper.randomInt(max_len - min_len + 1);
@@ -184,104 +152,66 @@ public class LimitedTree extends ReadsTree {
     }
 
     /**
-     * Method provides a random <code>LimitedTree</code> code generation of
-     * the specified length.
-     * <p>
-     * This is provided for generating trees with the maximal tree element limit
-     * greater than 9.
-     * <p>
-     * NOTE: This package is not optimised for such a trees.
+     * A shorthand to set the limits at once.
      * 
-     * @param len
-     *            The length of the randomly generated tree code.
-     * @param codeElementMin
-     *            The minimal code element limit of the randomly generated tree
-     *            code.
-     * @param codeElementMax
-     *            The maximal code element limit of the randomly generated tree
-     *            code.
-     * @return An array of integers representing the code.
+     * Code elements are generally numbers from [0,9].
+     * After setting the limits newly generated trees will have code
+     * elements within [min_arity, max_arity].
+     * 
+     * @param min_arity Downer limit for the code elements of this tree.
+     * @param max_arity Upper limit for the code elements of this tree.
      * @throws IllegalArgumentException
-     *             if <code> codeElementMin > codeElementMax </code> or <code> codeElementMin < 0 </code> or
-     *             <code> codeElementMax < 1 </code>
+     * 
+     * @see #setCodeElementMin(int)
+     * @see #setCodeElementMax(int)
      */
-
-    public static int[] generateRandomCode(int len, int min, int max)
-            throws IllegalArgumentException {
-        if (max < min) throw new IllegalArgumentException("max < min");
-        if (max < 1) throw new IllegalArgumentException("max < 1");
-        if (min < 0) throw new IllegalArgumentException("min < 0");
-
-        if (len == 1) return new int[] { 0 };
-
-        int[] d = new int[len - 1];
-        d[0] = len - 1;
-        if (max > d[0]) max = d[0];
-        int[] res = new int[len];
-        int index = 0;
-        Random random = RandomHelper.newRandom();
-        int rnd = 1;
-
-        if (min <= 0) {
-            if (max > 1) rnd = random.nextInt(max) + 1;
-            res[index++] = rnd;
-            for (int i = 1; i < len - 1; i++) {
-                d[i] = d[i - 1] - rnd;
-                if (d[i] == len - i - 1)
-                    if (max <= d[i])
-                        rnd = 1 + random.nextInt(max);
-                    else
-                        rnd = 1 + random.nextInt(d[i]);
-                else
-                    if (max <= d[i])
-                        rnd = random.nextInt(max + 1);
-                    else
-                        rnd = random.nextInt(d[i] + 1);
-                res[index++] = rnd;
-            }
-        }
-        else { // codeElementMin > 0
-            if (max > 1) rnd = random.nextInt(max) + 1;
-            res[index++] = rnd;
-            for (int i = 1; i < len - 1; i++) {
-                d[i] = d[i - 1] - rnd;
-                if (d[i] == len - i - 1)
-                    if (max <= d[i])
-                        rnd = min + random.nextInt(max - min + 1);
-                    else
-                        if (min <= d[i])
-                            rnd = min + random.nextInt(d[i] - min + 1);
-                        else
-                            rnd = 0;
-                else
-                    if (max <= d[i]) {
-                        int zero = random.nextInt(2);
-                        if (zero == 1)
-                            rnd = min + random.nextInt(max - min + 1);
-                        else
-                            rnd = 0;
-                    }
-                    else
-                        if (min <= d[i]) {
-                            int zero = random.nextInt(2);
-                            if (zero == 1)
-                                rnd = min + random.nextInt(d[i] - min + 1);
-                            else
-                                rnd = 0;
-                        }
-                        else
-                            rnd = 0;
-
-                res[index++] = rnd;
-            }
-
-        }
-
-        res[index++] = 0;
-
-        return res;
+    public static void setCodeElementLimits(int min_arity, int max_arity) {
+        if (max_arity < min_arity)
+            throw new IllegalArgumentException("max_arity < min_arity");
+        setCodeElementMin(min_arity);
+        setCodeElementMax(max_arity);
     }
 
+    /**
+     * Sets the minimum allowed degree of elements in generated codes.
+     * @param min_arity
+     */
+    public static void setCodeElementMin(int min_arity) {
+        if (min_arity < 0)
+            throw new IllegalArgumentException("min_arity < 0");
+        codeElementMin = min_arity;
+    }
+
+    /**
+     * @return The code element minimum.
+     * @see #setCodeElementMin(int)
+     */
+    public static int getCodeElementMin() {
+        return codeElementMin;
+    }
+
+    /**
+     * Sets the maximum allowed degree of elements in generated codes.
+     * @param max_arity
+     */
+    public static void setCodeElementMax(int max_arity) {
+        if (max_arity > 9)
+            throw new IllegalArgumentException("max_arity > 9");
+        codeElementMax = max_arity;
+    }
+
+    /**
+     * @return The code element maximum.
+     * @see #setCodeElementMax(int)
+     */
+    public static int getCodeElementMax() {
+        return codeElementMax;
+    }
+    
+    /**
+     * Same as the inherited method but with the limits applied during generation.
+     * @see org.kares.math.frec.core.ReadsTree#generateMutatedCode(int, int)
+     */
     protected String generateMutatedCode(int pos, int mut_len) {
         final String code = getCode();
         final int pos_len = subcodeLength(pos);
@@ -291,26 +221,11 @@ public class LimitedTree extends ReadsTree {
     }
 
     /**
-     * @return String representation for debugging purposes
+     * For debugging purposes. 
+     * @see java.lang.Object#toString()
      */
     public String toString() {
         return "LimitedTree: " + getCode() + "";
     }
-
-    /*
-    public static void main(String[] args) {
-        LimitedTree.setCodeElementLimits(0, 2);
-        for (int i = 0; i < 10; i++)
-            System.out.println(LimitedTree.generateRandomCode(3));
-        for (int i = 0; i < 10; i++)
-            System.out.println(LimitedTree.generateRandomCode(4));
-        for (int i = 0; i < 10; i++)
-            System.out.println(LimitedTree.generateRandomCode(6));
-        for (int i = 0; i < 10; i++)
-            System.out.println(LimitedTree.generateRandomCode(2, 8));
-        for (int i = 0; i < 10; i++)
-            System.out.println(LimitedTree.generateRandomCode(4, 10));
-    }
-    */
     
 }

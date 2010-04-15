@@ -1,3 +1,19 @@
+/*
+ * Copyright 2004 Karol Bucek
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.kares.math.frec.gui;
 
 import java.awt.*;
@@ -9,9 +25,10 @@ import org.kares.math.frec.jcm.data.*;
 import org.kares.math.frec.jcm.draw.*;
 
 /**
- * Class <code> OutputGraphPanel </code> is an output graphical
- * user interface used to provide a graphical environment
- * for the output data.
+ * An output graphical user interface panel that provides a 
+ * graphical environment for the output data.
+ * 
+ * @author kares
  */
 public class OutputGraphPanel extends JCMPanel {
 
@@ -32,14 +49,6 @@ public class OutputGraphPanel extends JCMPanel {
     private final JButton prev;
     private final JButton next;
 
-    /**
-     * Constructor that constructs a new panel.
-     * Adds the necessary components to this panel 
-     * and sets all the listeners.
-     *
-     * @param function An array of string that represents the
-     * (parsed) function (output) objects created.
-     */
     private OutputGraphPanel() {
         graph = new Graph();
         x = new Variable("x");
@@ -61,11 +70,7 @@ public class OutputGraphPanel extends JCMPanel {
         showGrid.addActionListener(new ActionListener() {
 
             public void actionPerformed(ActionEvent evt) {
-                if ( showGrid.isSelected() ) {
-                    grid.setVisible(false);
-                } else {
-                    grid.setVisible(true);
-                }
+            	grid.setVisible( showGrid.isSelected() );
             }
 
         });
@@ -95,6 +100,10 @@ public class OutputGraphPanel extends JCMPanel {
         init();
     }
 
+    /**
+     * Creates a new panel with the given functions.
+     * @param funcs The functions displayed on the panel.
+     */
     public OutputGraphPanel(String[] funcs) {
         this();
         setDisplayedFunctions(funcs);
@@ -116,14 +125,6 @@ public class OutputGraphPanel extends JCMPanel {
         }
     }
 
-    /**
-     * After constructing this panel further initialization
-     * is needed for the panel to be shown. This initialization
-     * accepts a <code>DrawedGraph</code> object that was created
-     * using the <code>InputGraphPanel</code>.
-     *
-     * @param drawGraph The graph drawed by the user from the <code>InputGraphPanel</code>.
-     */
     private void init() {
         CoordinateRect coords = canvas.getCoordinateRect();
         VariableInput xInput = new VariableInput();
@@ -243,18 +244,31 @@ public class OutputGraphPanel extends JCMPanel {
         adjustButtonStates();
     }
 
+    /**
+     * Set the functions displayed on this panel.
+     * @param functions
+     */
     public void setDisplayedFunctions(final String[] functions) {
         this.functionInputs = functions;
         this.length = functions != null ? functions.length : 0;
         if ( length > 0 ) showFunction(0);
     }
 
+    /**
+     * @param limits
+     */
     public void setAxisLimits(double[] limits) {
         controlPanel.setLimits(limits);
         canvas.getCoordinateRect().setLimits(limits);
         canvas.getCoordinateRect().setRestoreBuffer();
     }
 
+    /**
+     * Add an already "drawed" graph to this panel.
+     * As this is a output panel the graph is "read-only" no further
+     * drawing is possible using the output panel.
+     * @param drawGraph
+     */
     public void addDrawGraph(DrawGraph drawGraph) {
         canvas.add(drawGraph);
         if (drawGraph != null) {
@@ -262,4 +276,4 @@ public class OutputGraphPanel extends JCMPanel {
         }
     }
     
-} // end class SimpleGraph
+}

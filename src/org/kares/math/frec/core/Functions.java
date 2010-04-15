@@ -1,18 +1,36 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright 2004 Karol Bucek
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.kares.math.frec.core;
 
 /**
- * Standart functions for computing.
+ * Standart function implementation for computing.
+ * To be used by a {@link FunctionTree}.
  *
+ * @see Function
  * @see inner classes of this class
  * @author kares
  */
 public abstract strictfp class Functions {
 
+	/**
+	 * Addition "+" function.
+	 * 
+	 * @author kares
+	 */
     public static class Add extends Function.Base {
 
         public static final Add INSTANCE = new Add();
@@ -33,6 +51,11 @@ public abstract strictfp class Functions {
 
     }
 
+	/**
+	 * Subtraction "-" function.
+	 * 
+	 * @author kares
+	 */
     public static class Sub extends Function.Base {
 
         public static final Sub INSTANCE = new Sub();
@@ -53,6 +76,11 @@ public abstract strictfp class Functions {
 
     }
 
+	/**
+	 * Multiplication "*" function.
+	 * 
+	 * @author kares
+	 */
     public static class Mul extends Function.Base {
 
         public static final Mul INSTANCE = new Mul();
@@ -73,6 +101,11 @@ public abstract strictfp class Functions {
 
     }
 
+	/**
+	 * Division "/" function.
+	 * 
+	 * @author kares
+	 */
     public static class Div extends Function.Base {
 
         public static final Div INSTANCE = new Div();
@@ -93,6 +126,11 @@ public abstract strictfp class Functions {
 
     }
 
+	/**
+	 * Modulo (division remainder) function.
+	 * 
+	 * @author kares
+	 */
     public static class Mod extends Function.Base {
 
         public static final Mod INSTANCE = new Mod();
@@ -109,6 +147,11 @@ public abstract strictfp class Functions {
 
     }
 
+	/**
+	 * Power function e.g. x^2.
+	 * 
+	 * @author kares
+	 */
     public static class Pow extends Function.Base {
 
         public static final Pow INSTANCE = new Pow();
@@ -125,6 +168,11 @@ public abstract strictfp class Functions {
 
     }
     
+	/**
+	 * The goniometric sinus function.
+	 * 
+	 * @author kares
+	 */
     public static class Sin extends Function.Base {
 
         public static final Sin INSTANCE = new Sin();
@@ -145,6 +193,11 @@ public abstract strictfp class Functions {
 
     }
 
+	/**
+	 * The goniometric cosinus function.
+	 * 
+	 * @author kares
+	 */
     public static class Cos extends Function.Base {
 
         public static final Cos INSTANCE = new Cos();
@@ -165,6 +218,11 @@ public abstract strictfp class Functions {
 
     }
     
+	/**
+	 * The goniometric tangens function.
+	 * 
+	 * @author kares
+	 */
     public static class Tan extends Function.Base {
 
         public static final Tan INSTANCE = new Tan();
@@ -185,6 +243,11 @@ public abstract strictfp class Functions {
 
     }
 
+	/**
+	 * The goniometric cotangens function.
+	 * 
+	 * @author kares
+	 */
     public static class Cot extends Function.Base {
 
         public static final Cot INSTANCE = new Cot();
@@ -201,6 +264,11 @@ public abstract strictfp class Functions {
 
     }
 
+	/**
+	 * The goniometric secans function.
+	 * 
+	 * @author kares
+	 */
     public static class Sec extends Function.Base {
 
         public static final Sec INSTANCE = new Sec();
@@ -217,6 +285,11 @@ public abstract strictfp class Functions {
 
     }
 
+	/**
+	 * The goniometric cosecans function.
+	 * 
+	 * @author kares
+	 */
     public static class Csc extends Function.Base {
 
         public static final Csc INSTANCE = new Csc();
@@ -233,6 +306,11 @@ public abstract strictfp class Functions {
 
     }
 
+	/**
+	 * Arcus sinus function (the inverse of sin(x)).
+	 * 
+	 * @author kares
+	 */
     public static class ArcSin extends Function.Base {
 
         public static final ArcSin INSTANCE = new ArcSin();
@@ -253,6 +331,11 @@ public abstract strictfp class Functions {
 
     }
 
+	/**
+	 * Arcus cosinus function (the inverse of cos(x)).
+	 * 
+	 * @author kares
+	 */
     public static class ArcCos extends Function.Base {
 
         public static final ArcCos INSTANCE = new ArcCos();
@@ -273,6 +356,11 @@ public abstract strictfp class Functions {
 
     }
 
+	/**
+	 * Arcus tangens function (the inverse of tan(x)).
+	 * 
+	 * @author kares
+	 */
     public static class ArcTan extends Function.Base {
 
         public static final ArcTan INSTANCE = new ArcTan();
@@ -293,6 +381,11 @@ public abstract strictfp class Functions {
 
     }
 
+	/**
+	 * The absolute value function.
+	 * 
+	 * @author kares
+	 */
     public static class Abs extends Function.Base {
 
         public static final Abs INSTANCE = new Abs();
@@ -309,22 +402,13 @@ public abstract strictfp class Functions {
 
     }
 
-    public static class Sqrt extends Function.Base {
-
-        public static final Sqrt INSTANCE = new Sqrt();
-
-        Sqrt() { super("sqrt", 1); }
-
-        public double value(double[] x) {
-            return (x[0] < 0)? Double.NaN : StrictMath.sqrt(x[0]);
-        }
-
-        public String format(String[] varNames) {
-            return id + "(" + varNames[0] + ")";
-        }
-
-    }
-
+	/**
+	 * Computes the Euler's number <i>e</i> raised to
+	 * the power of x (e^x), where <i>e</i> is the base 
+	 * of the natural logarithms.
+	 * 
+	 * @author kares
+	 */
     public static class Exp extends Function.Base {
 
         public static final Exp INSTANCE = new Exp();
@@ -341,6 +425,11 @@ public abstract strictfp class Functions {
 
     }
 
+	/**
+	 * The natural logarithm with the base <i>e</i>.
+	 * 
+	 * @author kares
+	 */
     public static class Ln extends Function.Base {
 
         public static final Ln INSTANCE = new Ln();
@@ -357,6 +446,11 @@ public abstract strictfp class Functions {
 
     }
 
+    /**
+     * The natural logarithm with the base <i>2</i>.
+     * 
+     * @author kares
+     */
     public static class Log2 extends Function.Base {
 
         public static final Log2 INSTANCE = new Log2();
@@ -375,6 +469,11 @@ public abstract strictfp class Functions {
 
     }
 
+    /**
+     * The natural logarithm with the base <i>10</i>.
+     * 
+     * @author kares
+     */
     public static class Log10 extends Function.Base {
 
         public static final Log10 INSTANCE = new Log10();
@@ -393,6 +492,11 @@ public abstract strictfp class Functions {
 
     }
 
+    /**
+     * Implements the "truncing" (the integer part of a number) function.
+     * 
+     * @author kares
+     */
     public static class Trunc extends Function.Base {
 
         public static final Trunc INSTANCE = new Trunc();
@@ -409,6 +513,11 @@ public abstract strictfp class Functions {
 
     }
 
+    /**
+     * Implements rounding (to the closest integer).
+     * 
+     * @author kares
+     */
     public static class Round extends Function.Base {
 
         public static final Round INSTANCE = new Round();
@@ -425,6 +534,12 @@ public abstract strictfp class Functions {
 
     }
 
+    /**
+     * Returns the closest largest integer value that 
+     * is less than or equal to x.
+     * 
+     * @author kares
+     */
     public static class Floor extends Function.Base {
 
         public static final Floor INSTANCE = new Floor();
@@ -441,6 +556,12 @@ public abstract strictfp class Functions {
 
     }
 
+    /**
+     * Returns the closest smallest integer value that 
+     * is greater than or equal to x.
+     * 
+     * @author kares
+     */
     public static class Ceil extends Function.Base {
 
         public static final Ceil INSTANCE = new Ceil();
@@ -457,6 +578,32 @@ public abstract strictfp class Functions {
 
     }
 
+	/**
+	 * Square root function (the inverse of x^2).
+	 * 
+	 * @author kares
+	 */
+    public static class Sqrt extends Function.Base {
+
+        public static final Sqrt INSTANCE = new Sqrt();
+
+        Sqrt() { super("sqrt", 1); }
+
+        public double value(double[] x) {
+            return (x[0] < 0)? Double.NaN : StrictMath.sqrt(x[0]);
+        }
+
+        public String format(String[] varNames) {
+            return id + "(" + varNames[0] + ")";
+        }
+
+    }
+    
+    /**
+     * Cube root function (the inverse of x^3).
+     * 
+     * @author kares
+     */
     public static class Cbrt extends Function.Base {
 
         public static final Cbrt INSTANCE = new Cbrt();
@@ -474,6 +621,11 @@ public abstract strictfp class Functions {
 
     }
 
+    /**
+     * The factorial function.
+     * 
+     * @author kares
+     */
     public static class Fact extends Function.Base {
 
         public static final Fact INSTANCE = new Fact();
@@ -497,6 +649,11 @@ public abstract strictfp class Functions {
 
     }
 
+    /**
+     * The "negative" function (-x).
+     * 
+     * @author kares
+     */
     public static class Neg extends Function.Base {
 
         public static final Neg INSTANCE = new Neg();
@@ -513,6 +670,11 @@ public abstract strictfp class Functions {
 
     }
 
+    /**
+     * The maximum of two arguments.
+     * 
+     * @author kares
+     */
     public static class Max extends Function.Base {
 
         public static final Max INSTANCE = new Max();
@@ -529,6 +691,11 @@ public abstract strictfp class Functions {
 
     }
 
+    /**
+     * The minimum of two arguments.
+     * 
+     * @author kares
+     */
     public static class Min extends Function.Base {
 
         public static final Min INSTANCE = new Min();

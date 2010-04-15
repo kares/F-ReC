@@ -1,3 +1,18 @@
+/*
+ * Copyright 2004 Karol Bucek
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package org.kares.math.frec;
 
@@ -11,6 +26,12 @@ import org.kares.math.frec.core.*;
 import org.kares.math.frec.gui.*;
 import org.kares.math.frec.jcm.draw.*;
 
+/**
+ * The main entry point - runs an ugly swing/awt GUI.
+ * Usable as an applet as well as a standalone application.
+ * 
+ * @author kares
+ */
 public class Main extends JApplet implements Runnable {
     
     /*
@@ -32,6 +53,9 @@ public class Main extends JApplet implements Runnable {
     private JDialog progressDialog;
     private boolean savingEnabled;
 
+    /**
+     * @see JApplet#init()
+     */
     public void init() {
         inputPanel = new InputGraphPanel() {
 
@@ -69,6 +93,9 @@ public class Main extends JApplet implements Runnable {
         settingsDialog.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
     }
 
+    /**
+     * @see JApplet#start()
+     */
     public void start() {
         SwingUtilities.invokeLater(this);
     }
@@ -84,8 +111,8 @@ public class Main extends JApplet implements Runnable {
         settings.setDataSize(300);
         settings.setGenSize(100);
         settings.setGenMax(100);
-        //settings.setMinFunctionLength(FunctionTree.getCodeElementMin());
-        //settings.setMaxFunctionLength(FunctionTree.getCodeElementMax());
+        settings.setMinFunctionLength( Genetix.getMinFunctionLength() );
+        settings.setMaxFunctionLength( Genetix.getMaxFunctionLength() );
         settings.setGenMutationProbability(0.030F);
         settings.setGenCrossingProbability(0.900F);
         settings.setGenReproductProbability(0.950F);
@@ -107,14 +134,16 @@ public class Main extends JApplet implements Runnable {
             ((GPModelGenetix) genetix).setReproductProbability(settings.getGenReproductProbability());
             ((GPModelGenetix) genetix).setSelectionProbability(settings.getGenSelectionProbability());
         }
-        genetix.setSavingMode(savingEnabled);
-        genetix.setGenerationSize(settings.getGenSize());
-        genetix.setGenerationLimit(settings.getGenMax());
-        genetix.setMutationProbability(settings.getGenMutationProbability());
-        genetix.setCrossingProbability(settings.getGenCrossingProbability());
-        genetix.setArbitraryMutations(settings.isArbitraryMutations());
-        genetix.setArbitraryCrossings(settings.isArbitraryCrossings());
-        inputPanel.setDataSize(settings.getDataSize());
+        genetix.setSavingMode( savingEnabled );
+        genetix.setGenerationSize( settings.getGenSize() );
+        genetix.setGenerationLimit( settings.getGenMax() );
+        genetix.setMutationProbability( settings.getGenMutationProbability() );
+        genetix.setCrossingProbability( settings.getGenCrossingProbability() );
+        genetix.setArbitraryMutations( settings.isArbitraryMutations() );
+        genetix.setArbitraryCrossings( settings.isArbitraryCrossings() );
+        Genetix.setMinFunctionLength( settings.getMinFunctionLength() );
+        Genetix.setMaxFunctionLength( settings.getMaxFunctionLength() );
+        inputPanel.setDataSize( settings.getDataSize() );
 
         //appFrame.pack();
         //appFrame.setVisible(true);
@@ -189,104 +218,18 @@ public class Main extends JApplet implements Runnable {
         setDialogCenterLocation(settingsDialog);
         settingsDialog.setVisible(true);
 
-        //set.pack();
-        //set.setVisible(true);
         /*settingsReady()*/
     }
-    
+
+    /**
+     * Main method.
+     * @param args
+     */
     public static void main(String[] args) {
         Main main = new Main();
         main.init();
         main.enableSaving();
         main.start();
     }    
-
-    /*
-    private static class MenuBar extends JMenuBar
-    {
-        private JMenu menu;
-        private JMenuItem menuItem;
-        private JRadioButtonMenuItem rbMenuItem;
-        private Color dfColor = Color.LIGHT_GRAY.darker();
-
-        public MenuBar()
-        {
-            this.setBackground(dfColor);
-
-            //Build the first menu.
-            menu = new JMenu("File");
-            menu.setBackground(dfColor);
-            menu.setMnemonic(KeyEvent.VK_F);
-            menu.getAccessibleContext().setAccessibleDescription("File options");
-            this.add(menu);      
-    
-            //a group of JMenuItems
-            menuItem = new JMenuItem("New", KeyEvent.VK_N);
-            menu.add(menuItem);    
-            menuItem = new JMenuItem("Open", KeyEvent.VK_O);
-            menu.add(menuItem);
-            menuItem = new JMenuItem("Save", KeyEvent.VK_S);
-            menu.add(menuItem);
-
-            ButtonGroup group;
-            //a group of radio button menu items
-            menu.addSeparator();
-            group = new ButtonGroup();
-            rbMenuItem = new JRadioButtonMenuItem("Use Graph Drawing");
-            group.add(rbMenuItem);
-            menu.add(rbMenuItem);
-            rbMenuItem = new JRadioButtonMenuItem("New Graph Drawing");
-            rbMenuItem.setSelected(true);
-            group.add(rbMenuItem);
-            menu.add(rbMenuItem);
-    
-            //a group of radio button menu items
-            menu.addSeparator();
-            group = new ButtonGroup();
-            rbMenuItem = new JRadioButtonMenuItem("Use Current Limits");
-            group.add(rbMenuItem);
-            menu.add(rbMenuItem);
-            rbMenuItem = new JRadioButtonMenuItem("Set Default Limits");
-            rbMenuItem.setSelected(true);
-            group.add(rbMenuItem);
-            menu.add(rbMenuItem);    
-            //second menu in the menu bar.
-            menu = new JMenu("Control");
-            menu.setBackground(dfColor);
-            menu.setMnemonic(KeyEvent.VK_C);
-            menu.getAccessibleContext().setAccessibleDescription("Axis Controls");
-            this.add(menu);      
-    
-            //a group of JMenuItems
-            menuItem = new JMenuItem("Set Limits");
-            menu.add(menuItem);    
-            menuItem = new JMenuItem("Save Limits");
-            menu.add(menuItem);
-            menuItem = new JMenuItem("Restore Limits");
-            menu.add(menuItem); 
-            menu.addSeparator();
-            menuItem = new JMenuItem("Zoom In");
-            menu.add(menuItem);    
-            menuItem = new JMenuItem("Zoom Out");
-            menu.add(menuItem);
-            menuItem = new JMenuItem("Equalize Axes");
-            menu.add(menuItem);  
-    
-            //third menu in the menu bar.
-            menu = new JMenu("Setting");
-            menu.setBackground(dfColor);
-            menu.setMnemonic(KeyEvent.VK_S);
-            menu.getAccessibleContext().setAccessibleDescription("Genetix Settings");
-            this.add(menu);      
    
-            //fourth menu in the menu bar.
-            menu = new JMenu("Help");
-            menu.setBackground(dfColor);
-            menu.setMnemonic(KeyEvent.VK_H);
-            menu.getAccessibleContext().setAccessibleDescription("Help");
-            this.add(menu);          
-        }
-    }
-    */
-    
 }

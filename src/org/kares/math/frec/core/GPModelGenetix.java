@@ -1,14 +1,31 @@
+/*
+ * Copyright 2004 Karol Bucek
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.kares.math.frec.core;
 
 import org.kares.math.frec.util.RandomHelper;
 
 /**
- * Class <code> Genetix </code> is a class that manages the whole genetic
- * programming performed over <code>Function</code> objects. This class is
- * designed to provide the basic genetic algorithm (standart scheme) with some
- * optimalization for the purposes of the F-ReC project. For more effectivity it
- * is advised to overrride this class (at least its <code>run()</code>
- * method).
+ * Implements the genetic programming (GP) computing scheme.
+ * The most noticeable difference between GA and GP is that
+ * in the GP model parents might "survive" multiple generations.
+ * This seems more appropriate for genetic computing over 
+ * syntax trees for data approximation. 
+ * 
+ * @author kares
  */
 public class GPModelGenetix extends Genetix {
 
@@ -19,11 +36,6 @@ public class GPModelGenetix extends Genetix {
     private float selectionProbability = 0.85f;
 
     /**
-     * Creates a new <code>Genetix</code> object that will work over the
-     * default symbol set. The symbol set will be set for the
-     * <code>Function</code> class later. The default symbol set consists of
-     * the following functions (function symbols):
-     * <code> x+y, x-y, x*y, x/y, x^2, x^3, e^x, abs(x), sqrt(x), ln(x), log(x), min(x,y), max(x,y), sin(x), cos(x), tan(x), asin(x), acos(x), atan(x) </code>
      */
     public GPModelGenetix() {
         currentCodeMin = GenetixFunction.getFunctionCodeMinLength();
@@ -31,22 +43,8 @@ public class GPModelGenetix extends Genetix {
     }
 
     /**
-     * Creates a new <code>Genetix</code> object that will work over the
-     * provided symbol set. The symbol set will be set for the
-     * <code>Function</code> class later.
-     * 
-     * @param symbol
-     *            Symbols to be used by functions.
-     * @param arity
-     *            Arity of the provided symbols.
+     * @see org.kares.math.frec.core.Genetix#computeInit()
      */
-    /*
-    public GPModelGenetix(char[] symbol, byte[] arity) {
-        this();
-        setSymbols(symbol, arity);
-    }
-    */
-
     protected void computeInit() {
         initializeGeneration();
         checkFitnessErrors();
@@ -69,12 +67,15 @@ public class GPModelGenetix extends Genetix {
             final int len = getCurrentGeneration().length;
             super.addNewToGeneration(generationSize - len);
         }
-        GenetixFunction.setFunctionCodeLengthLimits(++currentCodeMin, ++currentCodeMax);
+        //GenetixFunction.setFunctionCodeLengthLimits(++currentCodeMin, ++currentCodeMax);
     }
 
+    /**
+     * @see org.kares.math.frec.core.Genetix#computeNext()
+     */
     protected void computeNext() {
         final int generationSize = getGenerationSize();
-        int select_size = Math.round(generationSize * selectionProbability);
+        int select_size = Math.round(generationSize * getSelectionProbability());
         selectBest(select_size);
         crossGeneration();
         mutateGeneration();
@@ -88,16 +89,15 @@ public class GPModelGenetix extends Genetix {
             super.addNewToGeneration(generationSize - len);
         }
         selectBest(generationSize);
-        if ( getGenerationCounter() % 2 == 0 ) {
-            GenetixFunction.setFunctionCodeLengthLimits(--currentCodeMin, --currentCodeMax);
-        } else {
-            GenetixFunction.setFunctionCodeLengthLimits(++currentCodeMin, ++currentCodeMax);
-        }
+        //if ( getGenerationCounter() % 2 == 0 ) {
+        //    GenetixFunction.setFunctionCodeLengthLimits(--currentCodeMin, --currentCodeMax);
+        //} else {
+        //    GenetixFunction.setFunctionCodeLengthLimits(++currentCodeMin, ++currentCodeMax);
+        //}
     }
 
     /**
-     * This is used for initialization, the starting generation is initialized
-     * randomly and its fitness values are computed.
+     * @see org.kares.math.frec.core.Genetix#initializeGeneration()
      */
     protected void initializeGeneration() {
         final int generationSize = getGenerationSize();
@@ -106,45 +106,42 @@ public class GPModelGenetix extends Genetix {
     }
 
     /**
-     * This method mutates the actual generation. All the functions might be
-     * mutated, the mutation process is managed using a mutation probability.
+     * @see org.kares.math.frec.core.Genetix#mutateGeneration()
      */
     protected void mutateGeneration() {
-        float prob = getMutationProbability();
-        GenetixFunction.Tuple gen_list = getCurrentGenerationAsTuple();
+        final float prob = getMutationProbability();
+        GenetixFunction.Tuple newGeneration = getCurrentGenerationAsTuple();
         final GenetixFunction[] currentGeneration = getCurrentGeneration();
         for (int i = 0; i < currentGeneration.length; i++) {
-            if (RandomHelper.randomBoolean(prob)) {
+            if ( RandomHelper.randomBoolean(prob) ) {
                 GenetixFunction mut = (GenetixFunction) currentGeneration[i].clone();
-                mut.mutateFunction(isArbitraryMutations());
-                gen_list.add(mut);
+                mut.mutateFunction( isArbitraryMutations() );
+                newGeneration.add(mut);
             }
         }
-        setCurrentGeneration(gen_list);
+        setCurrentGeneration(newGeneration);
     }
 
     /**
-     * This method crosses the functions of the actual generation. All the
-     * functions might contribute to the new generation, the process is managed
-     * using a crossing probability.
+     * @see org.kares.math.frec.core.Genetix#crossGeneration()
      */
     protected void crossGeneration() {
-        float prob = getCrossingProbability();
-        GenetixFunction.Tuple gen_list = getCurrentGenerationAsTuple();
+        final float prob = getCrossingProbability();
+        GenetixFunction.Tuple newGeneration = getCurrentGenerationAsTuple();
         final GenetixFunction[] currentGeneration = getCurrentGeneration();
         final int len = currentGeneration.length;
         for (int i = 0; i < len; i++) {
-            if (RandomHelper.randomBoolean(prob * (1 - i / currentGeneration.length))) {
+            if ( RandomHelper.randomBoolean(prob * (1 - i / len)) ) {
                 int rnd = RandomHelper.ascRandomInt(len);
                 while (rnd == i) rnd = RandomHelper.ascRandomInt(len);
                 GenetixFunction new1 = currentGeneration[i];
                 GenetixFunction new2 = currentGeneration[rnd];
                 new1.crossFunctions(new2, isArbitraryCrossings());
-                gen_list.add(new1);
-                gen_list.add(new2);
+                newGeneration.add(new1);
+                newGeneration.add(new2);
             }
         }
-        setCurrentGeneration(gen_list);
+        setCurrentGeneration(newGeneration);
     }
 
     /**
@@ -153,18 +150,18 @@ public class GPModelGenetix extends Genetix {
      * using a crossing probability.
      */
     protected void reproductGeneration() {
-        float prob = reproductProbability;
-        GenetixFunction.Tuple gen_list = getCurrentGenerationAsTuple();
+        float prob = getReproductProbability();
+        GenetixFunction.Tuple newGeneration = getCurrentGenerationAsTuple();
         final GenetixFunction[] currentGeneration = getCurrentGeneration();
         final int len = currentGeneration.length;
         for (int i = 0; i < len; i++) {
-            if (RandomHelper.randomBoolean(prob)) {
-                prob = reproductProbability * ((i + 1) / (len + 1));
-                prob = reproductProbability - prob;
-                gen_list.add(currentGeneration[i]);
+            if ( RandomHelper.randomBoolean(prob) ) {
+                prob = getReproductProbability() * ((i + 1) / (len + 1));
+                prob = getReproductProbability() - prob;
+                newGeneration.add(currentGeneration[i]);
             }
         }
-        setCurrentGeneration(gen_list);
+        setCurrentGeneration(newGeneration);
     }
 
     /**
@@ -174,12 +171,9 @@ public class GPModelGenetix extends Genetix {
      * @param limit the size of the set of functions added to the current generation
      */
     protected void addNewToGeneration(int limit) {
-        //if (currentGeneration.length < generationSize && currentGeneration.length + limit > generationSize) {
-        //    limit = generationSize - currentGeneration.length;
-        //}
-        GenetixFunction.Tuple gen_list = getCurrentGenerationAsTuple();
-        gen_list.addAll( generateFunctions(limit) );
-        setCurrentGeneration(gen_list);
+        GenetixFunction.Tuple newGeneration = getCurrentGenerationAsTuple();
+        newGeneration.addAll( generateFunctions(limit) );
+        setCurrentGeneration(newGeneration);
     }
 
     /**

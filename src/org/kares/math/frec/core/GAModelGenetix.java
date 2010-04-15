@@ -1,68 +1,47 @@
+/*
+ * Copyright 2004 Karol Bucek
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.kares.math.frec.core;
 
 /**
- * Class <code> Genetix </code> is a class that manages the whole genetic
- * programming performed over <code>Function</code> objects. This class is
- * designed to provide the basic genetic algorithm (standart scheme) with some
- * optimalization for the purposes of the F-ReC project. For more effectivity it
- * is advised to overrride this class (at least its <code>run()</code>
- * method).
+ * Implements the "standard" genetic algorithm (GA) computing scheme.
  *
- * The <code>compute()</code> behaviour is the following:
- * <ul>
- * <li> <code> generationSize = 100; </code>
- * <li> <code> init(2, 6); </code>
- * <li> <code> check(); </code>
- * <li>
- * <code> while (currentGeneration.length < generationSize) { add(generationSize - currentGeneration.length); check(); } </code>
- * <li> <code> select(50); </code>
- * <li> <code> generationSize = 50; </code>
- * <li> <code> while (generationCounter < generationLimit) { </code>
- * <ul>
- * <li> <code> if (save) saveGen(); </code>
- * <li> <code> mutate(); </code>
- * <li> <code> select(35); </code>
- * <li> <code> cross(); </code>
- * <li> <code> add(20); </code>
- * <li> <code> check(); </code>
- * <li> <code> generationCounter++; </code>
- * </ul>
- * <li> <code> } </code>
- * </ul>
+ * @see #computeInit()
+ * @see #computeNext()
+ * @author kares
  */
 public class GAModelGenetix extends Genetix {
     
     /**
-     * Creates a new <code>Genetix</code> object that will work over the
-     * default symbol set. The symbol set will be set for the
-     * <code>Function</code> class later. The default symbol set consists of
-     * the following functions (function symbols):
-     * <code> x+y, x-y, x*y, x/y, x^2, x^3, e^x, abs(x), sqrt(x), ln(x), log(x), min(x,y), max(x,y), sin(x), cos(x), tan(x), asin(x), acos(x), atan(x) </code>
      */
     public GAModelGenetix() {
         super();
     }
 
     /**
-     * Creates a new <code>Genetix</code> object that will work over the
-     * provided symbol set. The symbol set will be set for the
-     * <code>Function</code> class later.
+     * Initializes and validates the generated functions
+     * until there's enough valid ones to form the initial
+     * generation.
      * 
-     * @param symbol
-     *            Symbols to be used by functions.
-     * @param arity
-     *            Arity of the provided symbols.
+     * @see org.kares.math.frec.core.Genetix#computeInit()
      */
-    /*
-    public GAModelGenetix(char[] symbol, byte[] arity) {
-        super();
-        setSymbols(symbol, arity);
-    }
-    */
-
     protected void computeInit() {
         int generationSize = getGenerationSize();
         generationSize *= 2;
+        
         initializeGeneration();
         checkFitnessErrors();
         while (getCurrentGeneration().length < generationSize) {
@@ -75,6 +54,24 @@ public class GAModelGenetix extends Genetix {
         selectBest(generationSize);
     }
 
+    /**
+     * A single iteration is done as follows :
+     * <ol>
+     * 	<li>
+     * 	mutate instances in the current generation
+     *  </li>
+     *  <li>
+     *  cross the best functions available (parents do not usually
+     *  survive it to the next generation - only their children)
+     *  </li>
+     *  <li>
+     *  select the best functions and add some random instances
+     *  to keep variability
+     *  </li>
+     * </ol>
+     * 
+     * @see org.kares.math.frec.core.Genetix#computeNext()
+     */
     protected void computeNext() {
         int generationSize = getGenerationSize();
         mutateGeneration();
@@ -88,4 +85,36 @@ public class GAModelGenetix extends Genetix {
         checkFitnessErrors();
     }
 
+    /**
+     * Crosses the functions of the actual generation among each other.
+     */
+    /*
+    protected void crossGeneration() {
+        int len = currentGeneration.length;
+        int new_len = 2 * len;
+        GenetixFunction[] newGeneration = new GenetixFunction[new_len];
+        int i = 0;
+        while ( i < new_len ) {
+            //if ( RandomHelper.randomBoolean(crossingProbability) ) {
+                int rnd1 = 1 + RandomHelper.ascRandomInt(len-1);
+                int rnd2 = RandomHelper.ascRandomInt(len);
+                if ( rnd1 < rnd2 ) rnd1 = rnd2;
+                rnd2 = RandomHelper.randomInt(rnd1);
+                newGeneration[i] = (GenetixFunction) currentGeneration[rnd1].clone();
+                newGeneration[i+1] = (GenetixFunction) currentGeneration[rnd2].clone();
+                newGeneration[i].crossFunctions(newGeneration[i+1], arbitraryCrossings);
+                i += 2;
+            //}
+        }
+            
+        computeFitness(newGeneration);
+        len = len + new_len;
+        GenetixFunction[] all_gen = new GenetixFunction[len];
+        len = currentGeneration.length;
+        System.arraycopy(currentGeneration, 0, all_gen, 0, len);
+        System.arraycopy(newGeneration, 0, all_gen, len, new_len);
+        setCurrentGeneration(newGeneration);
+    }
+    */
+    
 }

@@ -1,3 +1,19 @@
+/*
+ * Copyright 2004 Karol Bucek
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.kares.math.frec.core;
 
 import java.util.ArrayList;
@@ -8,17 +24,14 @@ import java.util.Map;
 import org.kares.math.frec.util.RandomHelper;
 
 /**
- * Class <code>FunctionTree</code> brings a further extension of trees. This class
- * extends the tree by providing an evaluation (this means that for all the
- * vertices of the tree as a greph there is a symbols assigned). Thus that can be
- * represented as such a tree (called syntax tree). The variables and constants
- * used in a that expression are assigned to the lovest level vertices and the
- * other vertices correspond to the basic operations used in the expression.
+ * Brings function nodes to trees. The nodes of the tree represent {@link Function}s. 
+ * This is called a syntax tree. The tree evaluation starts at the lowest nodes and
+ * proceeds to the root element. The leaf elements represent the x variable.
+ * 
+ * @author kares
  */
-@SuppressWarnings("serial")
 public class FunctionTree extends LimitedTree {
 
-    //private static Function[] allowedFunctions;
     private static final Map allowedFunctionsByArities = new HashMap();
     
     private static boolean constantsAllowed = false;
@@ -27,13 +40,18 @@ public class FunctionTree extends LimitedTree {
 
     private Function[] functions;
 
+    /**
+     * Creates a tree with the given code and function attached to it.
+     * @param code
+     * @param functions
+     */
     public FunctionTree(String code, Function[] functions) {
         super(code);
         setFunctions(functions);
     }
 
     /**
-     * Returns a new random function instance.
+     * Generates a random instance.
      * @return random instance
      */
     public static FunctionTree getRandomInstance() {
@@ -41,7 +59,7 @@ public class FunctionTree extends LimitedTree {
     }
 
     /**
-     * Returns a new random function instance.
+     * Generates a random instance.
      * @param length
      * @return random instance
      */
@@ -53,22 +71,40 @@ public class FunctionTree extends LimitedTree {
         return instance;
     }
 
+    /**
+     * The constant minimum (when generating random constants).
+     * @return constant min value
+     */
     public static double getConstantMin() {
         return FunctionTree.constantMin;
     }
 
+    /**
+     * Set the constant minimum value.
+     * @see #getConstantMin()
+     * @param min
+     */
     public static void setConstantMin(double min) {
         FunctionTree.constantMin = min;
     }
 
-    public static void setConstantMax(double max) {
-        FunctionTree.constantMax = max;
-    }
-
+    /**
+     * The constant maximum (when generating random constants).
+     * @return constant max value
+     */
     public static double getConstantMax() {
         return FunctionTree.constantMax;
     }
 
+    /**
+     * Set the constant maximum value.
+     * @see #getConstantMax()
+     * @param max
+     */
+    public static void setConstantMax(double max) {
+        FunctionTree.constantMax = max;
+    }
+    
     public static FunctionTree parse(final String formatted) {
         throw new UnsupportedOperationException("parse() NOT IMPLEMETED !");
     }
@@ -81,6 +117,10 @@ public class FunctionTree extends LimitedTree {
         return functions;
     }
 
+    /**
+     * Sets the allowed set of functions to be used in random generated instances.
+     * @param functions the allowed set of functions
+     */
     public static void setAllowedFunctions(final Function[] functions) {
         //FunctionTree.allowedFunctions = functions;
         FunctionTree.allowedFunctionsByArities.clear();
@@ -126,14 +166,17 @@ public class FunctionTree extends LimitedTree {
     }
 
     /**
-     * This method returns the current functions used in this tree.
-     * 
+     * This method returns the functions used in this tree.
      * @return The function set of this tree.
      */
     public Function[] getFunctions() {
         return this.functions;
     }
 
+    /**
+     * Set the functions used in this tree.
+     * @param functions
+     */
     protected void setFunctions(final Function[] functions) {
         this.functions = functions;
     }
@@ -157,13 +200,9 @@ public class FunctionTree extends LimitedTree {
     */
 
     /**
-     * This method computes the value f(x) as the specified position x.
-     * <p>
-     * NOTE: This works until there is no other symbols than the accepted
-     * symbols from <code>FunctionMath</code>.
-     *
-     * @param x The variable value (double precision).
-     * @return The f(x) value (with 64-bit precision)
+     * This method computes the value f(x) at the specified position x.
+     * @param x The variable value.
+     * @return The f(x) value.
      */
     public double value(final double x) {
         return value(x, 0);
@@ -196,9 +235,9 @@ public class FunctionTree extends LimitedTree {
     }
 
     /**
-     * Returns a sub-function (subtree) of this tree.
+     * Returns a sub-function (subtree) of this function tree.
      *
-     * @param pos The position of the subfunction in this tree's code.
+     * @param pos The sub-position in this tree's code.
      * @return Sub-function of this tree as a <code>FunctionTree</code> object.
      *
      * @see ReadsTree#subcode(int)
@@ -213,18 +252,8 @@ public class FunctionTree extends LimitedTree {
     }
 
     /**
-     * This method is used to find out whether this object uses (has) constants
-     * or not. If this <code>FunctionTree</code> (when calling this method)
-     * returns <code>false</code> that means that there is no position in the
-     * tree ('s leaves) where the validation is representing a constants value.
-     * <p>
-     * NOTE: This method also sets the internal array representing the constants
-     * values of this tree to null if there is no position in the internal
-     * symbols array marking a constants position
-     * 
-     * @return True if and only if this uses constants in its validation.
+     * @return True if and only if this tree has constants in its syntax tree.
      */
-
     public boolean hasConstants() {
         for (int i = 0; i < functions.length; i++) {
             if (isConstantFunction(functions[i])) {
@@ -239,117 +268,11 @@ public class FunctionTree extends LimitedTree {
     }
 
     /**
-     * Creates and returns a copy of this object. This means that the object
-     * returned by this method is independent of this object (which is being
-     * cloned).
-     * <p>
-     * NOTE: This only calls <tt>super.clone()</tt> meaning to call the method
-     * inherited from <tt>Object</tt>. This is enought as all the fields of
-     * this object are arrays of primitive type or of primitive type.
-     * 
-     * @return A clone of this instance (a same <code>FunctionTree</code> object).
+     * Formats the syntax tree to an exact mathematical formula 
+     * (based on it's elementary functions).
+     * @see Function#format(String[])
+     * @return String A formula representing this function tree.
      */
-    /*
-     * public Object clone() { Object clone = null; try { clone = super.clone(); }
-     * catch(CloneNotSupportedException e) { } return clone; }
-     */
-    /**
-     * This parses the current that object, meaning that it finds the exact
-     * mathematical formula of this tree.
-     * <p>
-     * NOTE: This works until there is no other symbols than the accepted that
-     * symbols from <code>FunctionMath</code>.
-     * 
-     * @return String formula represented by this that.
-     */
-    /*
-    public String format() {
-        final byte[] code = getCodeDigits();
-        int i = 0;
-
-        if (code[i] == 0) {
-            return symbols[i] == VAR ? "x" : Double.toString(constants[i]);
-        }
-        
-        if (code[i] == 1) {
-            final String op = FunctionMath.toString(symbols[i]);
-            if (code[i + 1] == 0) {
-                String res = "x";
-                if (symbols[i + 1] == CONST) res = Double.toString(constants[i + 1]);
-                if ((symbols[i] == '2') || (symbols[i] == '3')) return res + op;
-                if (symbols[i] == 'e') return op + res; // TODO
-                return op + "(" + res + ")";
-            }
-            else {
-                String res = subFunction(i + 1).format();
-                if ((symbols[i] == '2') || (symbols[i] == '3')) return res + op;
-                if (symbols[i] == 'e') return op + res; // TODO
-                return op + "(" + res + ")";
-            }
-        }
-        if (code[i] == 2) {
-            if (code[i + 1] == 0)
-                if (code[i + 2] == 0) {
-                    String res1 = "x";
-                    if (symbols[i + 1] == 'a')
-                        res1 = Double.toString(constants[i + 1]);
-                    String res2 = "x";
-                    if (symbols[i + 2] == 'a')
-                        res2 = Double.toString(constants[i + 2]);
-                    String op = FunctionMath.toString(symbols[i]);
-                    return res1 + op + res2;
-                }
-                else // code[i+1]==0
-                {
-                    String res1 = "x";
-                    if (symbols[i + 1] == 'a')
-                        res1 = Double.toString(constants[i + 1]);
-                    String res2 = subFunction(i + 2).format();
-                    String op = FunctionMath.toString(symbols[i]);
-                    return res1 + op + res2;
-                }
-            else // code[i+1]!=0
-            {
-                FunctionTree function1 = subFunction(i + 1);
-                String res1 = function1.format();
-                int len = function1.getCode().length();
-                String op = FunctionMath.toString(symbols[i]);
-
-                if (code[i + 1 + len] == 0) {
-                    String res2 = "x";
-                    if (symbols[i + 1 + len] == 'a')
-                        res2 = Double.toString(constants[i + 1 + len]);
-                    return res1 + op + res2;
-                }
-                else {
-                    String res2 = subFunction(i + 1 + len).format();
-                    return res1 + op + res2;
-                }
-            }
-        }
-
-        int pos = i;
-        ArrayList subFxs = new ArrayList();
-        while (pos < getCode().length()) {
-            FunctionTree f = subFunction(pos + 1);
-            subFxs.add(f);
-            pos += f.length();
-        }
-
-        StringBuffer res = new StringBuffer();
-        res.append(FunctionMath.toString(symbols[i]));
-        res.append('(');
-        final int size = subFxs.size();
-        for (int j = 0; j < size; j++) {
-            String subStr = ((FunctionTree) subFxs.get(j)).format();
-            res.append(subStr);
-            if (j != size - 1) res.append(',');
-        }
-        res.append(')');
-        return res.toString();
-    }
-    */
-
     public String format() {
         return format(0);
     }
@@ -376,124 +299,7 @@ public class FunctionTree extends LimitedTree {
     }
 
     /**
-     * This method checks this that object's code for redundant elements e.g.
-     * the that sqrt(sin(asin(x))) has two redundant elements (subfunctions)
-     * sin(x) and asin(x), thus the code should be sqrt(x).
-     * <p>
-     * NOTE: This works until there is no other symbols than the accepted that
-     * symbols from <code>FunctionMath</code>.
-     */
-    /*
-    public boolean removeInverseElements() {
-        final String code = getCode();
-        final int len = code.length();
-        final int[] marked = new int[len];
-        final byte[] codeDigits = getCodeDigits();
-
-        int index = 0, mark = 0;
-        while (index < len) {
-            if (codeDigits[index] != 1 || codeDigits[index + 1] != 1) {
-                index++;
-                continue;
-            }
-
-            if ((symbols[index] == 's') && (symbols[index + 1] == 'S')
-                    || (symbols[index] == 'S') && (symbols[index + 1] == 's')) {
-                marked[index] = -1;
-                marked[index + 1] = -1;
-                mark++;
-                index += 2;
-                continue;
-            }
-            if ((symbols[index] == 'c') && (symbols[index + 1] == 'C')
-                    || (symbols[index] == 'C') && (symbols[index + 1] == 'c')) {
-                marked[index] = -1;
-                marked[index + 1] = -1;
-                mark++;
-                index += 2;
-                continue;
-            }
-            if ((symbols[index] == 't') && (symbols[index + 1] == 'T')
-                    || (symbols[index] == 'T') && (symbols[index + 1] == 't')) {
-                marked[index] = -1;
-                marked[index + 1] = -1;
-                mark++;
-                index += 2;
-                continue;
-            }
-            if ((symbols[index] == '~') && (symbols[index + 1] == '2')
-                    || (symbols[index] == '2') && (symbols[index + 1] == '~')) {
-                marked[index] = -1;
-                marked[index + 1] = -1;
-                mark++;
-                index += 2;
-                continue;
-            }
-            if ((symbols[index] == 'l') && (symbols[index + 1] == 'e')
-                    || (symbols[index] == 'e') && (symbols[index + 1] == 'l')) {
-                marked[index] = -1;
-                marked[index + 1] = -1;
-                mark++;
-                index += 2;
-                continue;
-            }
-            if ((symbols[index] == '<') && (symbols[index + 1] == 'x')
-                    && (symbols[index + 2] == 'x') || (symbols[index] == '>')
-                    && (symbols[index + 1] == 'x') && (symbols[index + 2] == 'x')) {
-                marked[index] = -1;
-                marked[index + 1] = -1;
-                mark++;
-                index += 3;
-                continue;
-            }
-            index++;
-        } // while
-
-        mark *= 2;
-        index = 0;
-        StringBuffer newCode = new StringBuffer(len);
-        final char[] sym = this.symbols;
-        char[] newSymbol = new char[len - mark];
-        final double[] con = this.constants;
-        boolean removed = false;
-        if (con != null) {
-            double[] newConstant = new double[len - mark];
-            for (int i = 0; i < len; i++) {
-                if (marked[i] != -1) {
-                    newConstant[index] = con[i];
-                    newSymbol[index++] = sym[i];
-                    newCode.append(code.charAt(i));
-                } else removed = true;
-            }
-            setConstants(newConstant);
-        }
-        else {
-            for (int i = 0; i < len; i++) {
-                if (marked[i] != -1) {
-                    newSymbol[index++] = sym[i];
-                    newCode.append(code.charAt(i));
-                } else removed = true;
-            }
-        }
-        setSymbols(newSymbol);
-        setCode(newCode);
-        return removed;
-    }
-    */
-
-    /**
-     * This method causes that this that (code) will be randomly mutated at a
-     * random position which is distinct from the root position (first position
-     * in the code). The whole subtree at the specified position will be
-     * replaced with a new one.
-     * <p>
-     * The current behaviour of this method is that if the that has no constants
-     * before the mutation than it also won't have after. Otherwise the mutated
-     * part may contain also constants.
-     * 
-     * @param mut_len
-     *            Length of the new subfunction of this that.
-     * @return The random position where the mutation occured.
+     * @see org.kares.math.frec.core.ReadsTree#mutateCode(MutationContext)
      */
     public void mutateCode(final MutationContext context) {
         final int old_len = length();
@@ -518,119 +324,20 @@ public class FunctionTree extends LimitedTree {
     }
 
     /**
-     * This method causes that this that (code) will be randomly mutated at a
-     * random position which is distinct from the root position (first position
-     * in the code). The whole subtree at the specified position will be
-     * replaced with a new one, but the length is limited by the parameters of
-     * this method.
-     * <p>
-     * The current behaviour of this method is that if the that has no constants
-     * before the mutation than it also won't have after. Otherwise the mutated
-     * part may contain also constants.
+     * Method that crosses two function trees at a random position.
+     * The functions exchange their subtrees at the selected positions.
      * 
-     * @param min_len
-     *            Minimal accepted length of the result that.
-     * @param max_len
-     *            Maximal accepted length of the result that.
-     * @return The random position where the mutation occured
-     * (-1 if mutation failed).
-     */
-    /*
-    public int mutateCode(int min_len, int max_len) {
-        int old_len = length();
-        int pos = 0, pos_len = 0, mut_len = 0;
-
-        int maxTries = old_len * 2 + 1;
-        while ( maxTries-- > 0 ) {
-            pos = 1 + RandomHelper.randomInt(old_len - 1);
-            pos_len = subcodeLength(pos);
-            mut_len = 1 + RandomHelper.randomInt(max_len);
-            int tmp = old_len + mut_len - pos_len;
-            if (tmp < min_len || max_len < tmp) continue;
-        }
-        if ( maxTries == 0 ) return -1; // could not mutate
-        
-        StringBuffer res = new StringBuffer(old_len + mut_len);
-        res.append( getCode().substring(0, pos) );
-        res.append( generateRandomCode(mut_len) );
-        res.append( getCode().substring(pos + pos_len, old_len) );
-        setCode(res);
-
-        int new_len = length();
-        char[] newSymbol = new char[new_len];
-
-        if ((constantsAllowed) && (constants != null)) {
-            double[] newConstant = new double[new_len];
-            for (int i = 0; i < pos; i++) {
-                newSymbol[i] = this.symbols[i];
-                newConstant[i] = this.constants[i];
-            }
-
-            int index = pos + mut_len;
-            if (old_len < new_len)
-                index -= new_len - old_len;
-            else
-                index += old_len - new_len;
-
-            for (int i = pos + mut_len; i < new_len; i++) {
-                newSymbol[i] = this.symbols[index];
-                newConstant[i] = this.constants[index++];
-            }
-
-            symbols = newSymbol;
-            constants = newConstant;
-            randomSymbols(pos, pos + mut_len);
-            randomConstants(pos, pos + mut_len);
-        }
-        else {
-            for (int i = 0; i < pos; i++)
-                newSymbol[i] = this.symbols[i];
-
-            int index = pos + mut_len;
-            if (old_len < new_len)
-                index -= new_len - old_len;
-            else
-                index += old_len - new_len;
-
-            for (int i = pos + mut_len; i < new_len; i++)
-                newSymbol[i] = this.symbols[index++];
-
-            symbols = newSymbol;
-            randomSymbols(pos, pos + mut_len);
-            if (constantsAllowed) {
-                constants = new double[new_len];
-                randomConstants(pos, pos + mut_len);
-            }
-        }
-        return pos;
-    }
-    */
-
-    /**
-     * Method that crosses two <code>FunctionTree</code> objects. This method
-     * causes that a random position is selected in both functions and then the
-     * subfunctions (subtrees) are changed among these functions.
-     * 
-     * @param that
-     *            <code>FunctionTree</code> object to be crossed with this.
-     * @return The new trees created.
+     * @see #crossCode(ReadsTree)
      */
     public FunctionTree[] crossCode(FunctionTree that) {
         return crossCode(that, 0, Integer.MAX_VALUE);
     }
 
     /**
-     * Method that crosses two <code>FunctionTree</code> objects. This method
-     * causes that a random position is selected in both functions and then the
-     * subfunctions (subtrees) are changed among these functions.
+     * Method that crosses two function trees at a random position.
+     * The functions exchange their subtrees at the selected positions.
      * 
-     * @param that
-     *            <code>FunctionTree</code> object to be crossed with this.
-     * @param min_len
-     *            Minimal length of the newly created functions (trees).
-     * @param max_len
-     *            Maximal length of the newly created functions (trees).
-     * @return The new trees created.
+     * @see #crossCode(ReadsTree, int, int)
      */
     public FunctionTree[] crossCode(FunctionTree that, int min_len, int max_len) {
         CrossingContext context = randomCrossingContext(that, min_len, max_len);
@@ -640,6 +347,9 @@ public class FunctionTree extends LimitedTree {
         };
     }
 
+    /**
+     * @see org.kares.math.frec.core.ReadsTree#crossCode(org.kares.math.frec.core.ReadsTree.CrossingContext)
+     */
     public void crossCode(final CrossingContext context) {
         super.crossCode(context);
 
@@ -681,13 +391,11 @@ public class FunctionTree extends LimitedTree {
     // Object :
 
     /**
-     * Method inherited from <code>Object</code>. Provides extended equality
-     * test for objects of this class.
+     * Provides extended equality test for objects of this class.
      * <p>
-     * This method is based on comparing to functions as strings returned by the
-     * <code>format()</code> method.
+     * This method compares functions based on {@link FunctionTree#format()}.
      *
-     * @param other Object to be compared with this object.
+     * @see Object#equals(Object)
      */
     public boolean equals(Object other) {
         if (!super.equals(other)) return false;
@@ -706,7 +414,6 @@ public class FunctionTree extends LimitedTree {
 
     /**
      * @see Object#clone()
-     * @return clone of this tree
      */
     public Object clone() {
         FunctionTree clone = (FunctionTree) super.clone();
@@ -715,10 +422,8 @@ public class FunctionTree extends LimitedTree {
     }
 
     /**
-     * Method used to provide a <code>String</code> representation of an
-     * object.
-     *
-     * @return String representing this that.
+     * For debugging purposes. 
+     * @see java.lang.Object#toString()
      */
     public String toString() {
         StringBuffer str = new StringBuffer();

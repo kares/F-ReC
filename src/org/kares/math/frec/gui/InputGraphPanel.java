@@ -1,3 +1,19 @@
+/*
+ * Copyright 2004 Karol Bucek
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.kares.math.frec.gui;
 
 import java.awt.*;
@@ -9,9 +25,10 @@ import org.kares.math.frec.jcm.data.*;
 import org.kares.math.frec.jcm.draw.*;
 
 /**
- * Class <code> InputGraphPanel </code> is an input graphical
- * user interface used to provide hasData for the application
- * by getting input from the user.
+ * An input graphical user interface panel used to gather input
+ * data for the application by interacting with the user.
+ * 
+ * @author kares
  */
 public class InputGraphPanel extends JCMPanel {
 
@@ -35,8 +52,7 @@ public class InputGraphPanel extends JCMPanel {
     private boolean hasData = false;
 
     /**
-     * Constructor that constructs a new panel.
-     * Adds the components to this panel and sets the listeners.
+     * Creates a new input panel.
      */
     public InputGraphPanel() {
         x = new Variable("x");
@@ -155,10 +171,6 @@ public class InputGraphPanel extends JCMPanel {
         init();
     }
 
-    /**
-     * After constructing this panel further initialization
-     * is needed for the panel to be shown.
-     */
     private void init() {
         final VariableInput xInput = new VariableInput();
 
@@ -255,14 +267,6 @@ public class InputGraphPanel extends JCMPanel {
 
     }  // end init()
 
-    /**
-     * Method which indicates that this panel
-     * already has the input hasData needed to compute.
-     */
-    public boolean hasData() {
-        return hasData;
-    }
-
     private transient Color validInputBackground = null;
 
     private void showFunction() {
@@ -294,7 +298,7 @@ public class InputGraphPanel extends JCMPanel {
         }
     }
 
-    private void removeFunction() {
+    void removeFunction() {
         input.setParser(null);
         graph.setFunction(null);
         drawCanvas.rem(graph);
@@ -304,10 +308,21 @@ public class InputGraphPanel extends JCMPanel {
     }
 
     /**
-     * Get the <code>DrawedGraph</code> object which is
-     * an abstraction of what the user draws on this panel.
-     *
-     * @return User drawn graph object representation.
+     * This returns the axis limits (xmin, xmax, ymin, ymax)
+     * of this panel.
+     * @return The x-y limits. 
+     */
+    public double[] getAxisLimits() {
+        return axisLimits;
+    }
+
+    private void setAxisLimits() {
+        axisLimits = controlPanel.getLimits();
+    }
+    
+    /**
+     * Get the <code>DrawGraph</code> used on this panel.
+     * @return The user drawn "graph".
      */
     public DrawGraph getDrawGraph() {
         return drawGraph;
@@ -327,17 +342,18 @@ public class InputGraphPanel extends JCMPanel {
     }
 
     /**
-     * This returns the axis limits (xmin, xmax, ymin, ymax)
-     * of this panel (panel's canvas).
+     * Indicates whether this panel already has any input data from the user.
+     * @see #storeData()
      */
-    public double[] getAxisLimits() {
-        return axisLimits;
+    public boolean hasData() {
+        return hasData;
     }
-
-    private void setAxisLimits() {
-        axisLimits = controlPanel.getLimits();
-    }
-
+    
+    /**
+     * Store a snapshot of current data (from the {@link #getDrawGraph()}).
+     * If the user did not yet drawn anything then nothing is stored.
+     * @see #hasData()
+     */
     public void storeData() {
         FunctionPoint[] fp = drawGraph.getFunctionPoints(dataSize);
         if ( fp != null && fp.length > 0 ) {
@@ -352,12 +368,20 @@ public class InputGraphPanel extends JCMPanel {
         }
     }
 
+    /**
+     * @see #storeData()
+     * @return Returns the stored data x values.
+     */
     public float[] getDataX() {
         if ( ! hasData )
             throw new IllegalStateException("data not yet stored");
         return dataX;
     }
 
+    /**
+     * @see #storeData()
+     * @return Returns the stored data y values.
+     */
     public float[] getDataY() {
         if ( ! hasData )
             throw new IllegalStateException("data not yet stored");
