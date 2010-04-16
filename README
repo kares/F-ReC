@@ -32,6 +32,11 @@ The GUI part uses a slightly hacked version of JCM (Java Components for Math)
 library. The library comes with a bunch of AWT components, for documentation and 
 examples please see the JCM homepage (http://math.hws.edu/javamath).  
 
+Sample
+------
+
+Screenshots of computed results: http://github.com/kares/F-ReC/tree/master/doc/results
+
 
 Building & Running
 ==================
