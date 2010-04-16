@@ -1,0 +1,47 @@
+F-ReC
+=====
+
+F-ReC stands for Function-ReCognition and is a prototype for recognizing 
+functions from training data using genetic computation patterns.
+
+The whole idea is based on representing functions as trees - Read's linear
+code is used to encode such trees (this encoding among others is suitable 
+for genetic operations, such as mutation and crossing, over trees).
+These tree structure is sometimes called a "syntax tree" as well.
+
+Example: http://en.wikipedia.org/wiki/File:Genetic_Program_Tree.png
+
+Core
+----
+
+The application has a reusable core part for genetic computing over functions.
+For further details see the javadoc for the _org.kares.math.frec.core_ package.
+
+GUI
+---
+
+There's a ugly but usable UI based on AWT/Swing which is the first thing You'll
+see when You run the program. It's not that intuitive but the purpose of the panel
+with the coordinate system is to gather input from the user. Use Your mouse to draw
+some lines which would represent the data of the approximated function.
+
+JCM
+---
+
+The GUI part uses a slightly hacked version of JCM (Java Components for Math) 
+library. The library comes with a bunch of AWT components, for documentation and 
+examples please see the JCM homepage (http://math.hws.edu/javamath).  
+
+
+Building & Running
+==================
+
+You'll need ant (http://ant.apache.org/):
+
+		ant run
+
+See build.xml for available ant targets.
+
+Developed ("cowboy-style") as a school (http://science.upjs.sk) project. 
+The JCM sources are available under a non-restrictive license (see source).
+Copyright (c) 2004 Karol Bucek, licensed under Apache License, Version 2.0
